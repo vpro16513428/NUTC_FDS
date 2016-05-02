@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("max=",res[0].toString());
             Log.d("percent=",res[1].toString());
             //可以在這裡使用res[0]和res[1]去改變UI的值
-            //...
+            
         }
     }
 
