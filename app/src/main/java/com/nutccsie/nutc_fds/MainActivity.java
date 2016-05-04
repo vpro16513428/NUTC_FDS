@@ -1,9 +1,14 @@
 package com.nutccsie.nutc_fds;
 
+import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.preference.DialogPreference;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,8 +25,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final Button Button3 = (Button)findViewById(R.id.button3);
+        final Button Button4 = (Button)findViewById(R.id.button4);
+        final Button Button5 = (Button)findViewById(R.id.button5);
+        Button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Reset();
+            }
+        });
+        Button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Reset();
+            }
+        });
+        Button5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Reset();
+            }
+        });//AlertDialog
 
         new getjson().execute();//下這一行getjson才會做動作
+    }
+    private void Reset(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you want to reset？").setPositiveButton("No", new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which){
+               dialog.cancel();
+            }}).setNegativeButton("Yes",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which){
+                dialog.cancel();
+            }
+        });
+        AlertDialog reset_dialog = builder.create();
+        reset_dialog.show();
     }
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
         @Override
