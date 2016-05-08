@@ -47,8 +47,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });//AlertDialog
 
+        Button button = (Button)findViewById(R.id.button);
+        button.setOnClickListener(new Button.OnClickListener(){
+            public void onClick(View view){
+                jumptoSet();
+            }
+        });
         new getjson().execute();//下這一行getjson才會做動作
     }
+
     private void Reset(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Are you want to reset？").setPositiveButton("No", new DialogInterface.OnClickListener(){
@@ -63,7 +70,27 @@ public class MainActivity extends AppCompatActivity {
         });
         AlertDialog reset_dialog = builder.create();
         reset_dialog.show();
+    }//AlertDialog
+
+    public void jumptoSet(){
+        setContentView(R.layout.set);
+        Button button6 = (Button)findViewById(R.id.button6);
+        button6.setOnClickListener(new  Button.OnClickListener(){
+            public void onClick(View view){
+                jumptoMain();
+            }
+        });
     }
+    public void jumptoMain(){
+        setContentView(R.layout.activity_main);
+        Button button = (Button)findViewById(R.id.button);
+        button.setOnClickListener(new Button.OnClickListener(){
+            public void onClick(View view){
+                jumptoSet();
+            }
+        });
+    }
+
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
         @Override
         protected Object[] doInBackground(Void... params) {
