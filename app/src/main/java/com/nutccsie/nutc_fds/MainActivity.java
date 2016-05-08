@@ -49,10 +49,12 @@ public class MainActivity extends AppCompatActivity {
 
         Button button = (Button)findViewById(R.id.button);
         button.setOnClickListener(new Button.OnClickListener(){
+            @Override
             public void onClick(View view){
                 jumptoSet();
             }
         });
+
         new getjson().execute();//下這一行getjson才會做動作
     }
 
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.set);
         Button button6 = (Button)findViewById(R.id.button6);
         button6.setOnClickListener(new  Button.OnClickListener(){
+            @Override
             public void onClick(View view){
                 jumptoMain();
             }
@@ -85,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Button button = (Button)findViewById(R.id.button);
         button.setOnClickListener(new Button.OnClickListener(){
+            @Override
             public void onClick(View view){
                 jumptoSet();
             }
