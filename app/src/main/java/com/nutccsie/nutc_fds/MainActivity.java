@@ -7,6 +7,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
 
@@ -57,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
         new getjson().execute();//下這一行getjson才會做動作
     }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }// ActionBar
 
     private void Reset(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -140,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("max=",res[0].toString());
             Log.d("percent=",res[1].toString());
             //可以在這裡使用res[0]和res[1]去改變UI的值
-            
+
         }
     }
 
