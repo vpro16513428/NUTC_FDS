@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 jumptoSet();
             }
         });
+
     }
 
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                         max=Integer.parseInt(jsonArray.getJSONObject(i).getString("field1"));
                     }
                 }
-                percent=(float) Integer.parseInt(jsonArray.getJSONObject(jsonArray.length()-1).getString("field1"))/max;
+                percent=(float) Integer.parseInt(jsonArray.getJSONObject(jsonArray.length()-1).getString("field1"))/max*100;
                 //endregion
 
                 //Log.d("Tag_in:",jsonArray.getJSONObject(1).getString("field1"));
@@ -148,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d("max=",res[0].toString());
             Log.d("percent=",res[1].toString());
             //可以在這裡使用res[0]和res[1]去改變UI的值
-
+            Button Button3 = (Button)findViewById(R.id.button3);
+            Button3.setText(Button3.getText().toString()+"     "+(res[1].toString().substring(0,res[1].toString().indexOf(".")+3))+"%");
+            //Button3.setText(String.format("%s%s", Button3.getText().toString(), res[1].toString()));
         }
     }
 
