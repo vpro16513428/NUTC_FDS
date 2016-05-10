@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private ArrayList<String> item;
     int count = 0;
-    String[] str ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
                                 if (!inputText.getText().toString().equals("")){
                                     item.add(inputText.getText().toString());
                                     inputText.setText("");
-                                    str[count] = inputText.getText().toString();
                                     new getjson().execute();
                                 }
                             }
@@ -110,10 +108,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void opendelete(){
-
+        int y =0 ;
+        final String del ;
+        String[] str = new String[count];
+        for(int i=0; i<count; i++) {
+            str[i] = item.set(i,item.get(i));
+            y++;
+        }
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("刪除")
-                .setItems(str , null)
+                .setSingleChoiceItems(str, 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
                 .setPositiveButton("取消",
                         new  DialogInterface.OnClickListener(){
                             @Override
@@ -125,10 +134,10 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
+                                    
                             }
                         })
-                .create().show();
+                .show();
     }//用AlertDialog的方式以EditText新增到listview
 
     private void opensetting(){
