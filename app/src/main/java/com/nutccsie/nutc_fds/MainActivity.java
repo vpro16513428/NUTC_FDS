@@ -1,5 +1,6 @@
 package com.nutccsie.nutc_fds;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.preference.DialogPreference;
@@ -19,6 +20,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,6 +30,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private ListView listinput;
     private ArrayAdapter<String> adapter;
     private ArrayList<String> item;
-
+    int count = 0;
+    String[] str ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,9 +66,10 @@ public class MainActivity extends AppCompatActivity {
                 openOptionsDialog();
                 return true;
             case R.id.action_delete:
-
+                opendelete();
                 return true;
             case R.id.action_settings:
+                opensetting();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -75,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.sec_activity, null);
         final EditText inputText = (EditText)v.findViewById(R.id.edit);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("請輸入名稱或代稱")
+            new AlertDialog.Builder(MainActivity.this)
+                .setTitle("新增")
                 .setView(v)
                 .setPositiveButton("取消",
                         new  DialogInterface.OnClickListener(){
@@ -84,22 +89,76 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog,int which){
                                 dialog.cancel();
                             }
-                        }).setNegativeButton("確定",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (!inputText.getText().toString().equals("")){
-                            item.add(inputText.getText().toString());
-                            inputText.setText("");
-                            listinput.setAdapter(adapter);
-                        }
-                    }
-                }).create().show();
-    }//用AlertDialog的方式以EditText新增到Button
+                        })
+                    .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (!inputText.getText().toString().equals("")){
+                                    item.add(inputText.getText().toString());
+                                    inputText.setText("");
+                                    str[count] = inputText.getText().toString();
+                                    new getjson().execute();
+                                }
+                            }
+                        })
+                    .create().show();
+    }//用AlertDialog的方式以EditText新增到listview
 
     public EditText getInputText() {
         return inputText;
     }
+
+    private void opendelete(){
+
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("刪除")
+                .setItems(str , null)
+                .setPositiveButton("取消",
+                        new  DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog,int which){
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                            }
+                        })
+                .create().show();
+    }//用AlertDialog的方式以EditText新增到listview
+
+    private void opensetting(){
+        LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+        final View v = inflater.inflate(R.layout.setting_activity, null);
+        final View w = inflater.inflate(R.layout.setting_activity, null);
+        final SeekBar seekBar = (SeekBar)v.findViewById(R.id.seekBar);
+        final SeekBar seekBar1 = (SeekBar)w.findViewById(R.id.seekBar2);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("設定")
+                .setMessage("123")
+                .setView(v)
+                .setPositiveButton("取消",
+                        new  DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog,int which){
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        })
+                .create().show();
+    }//set使用AlertDialog的方式顯示SeekBar
+
+
 
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
         @Override
@@ -146,6 +205,11 @@ public class MainActivity extends AppCompatActivity {
             Log.d("max=",res[0].toString());
             Log.d("percent=",res[1].toString());
             //可以在這裡使用res[0]和res[1]去改變UI的值
+            if(item.size()>0){
+                item.set(count,item.get(count)+"          "+res[1]+"%");
+                listinput.setAdapter(adapter);
+                ++count;
+            }//在list後面顯示%數
         }
     }
 
