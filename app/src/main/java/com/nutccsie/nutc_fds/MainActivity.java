@@ -34,6 +34,9 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
+    int channel_total=0;
+    int[][] channel_info;// [0] ID , [1] MAX , [2] LAST , [3] Percent
+
     private EditText inputText;
     private ListView listinput;
     private ArrayAdapter<String> adapter;
@@ -173,31 +176,48 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Object[] doInBackground(Void... params) {
             try {
-                //region 從thinkspeak獲取JSON資料(純String)存成JSONArray的型態在jsonArray
-                URL url = new URL("http://api.thingspeak.com/channels/96545/fields/1.json?api_key=5NE777ZJOKKJ1GJT");
+
+                URL url = new URL("https://api.thingspeak.com/users/vpro16513428/channels.json");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
                 String jsonString= reader.readLine();
                 reader.close();
-                JSONArray jsonArray =new  JSONObject(jsonString).getJSONArray("feeds");//取得feeds的陣列
+                conn.disconnect();
 
-                int max=0;//最大
-                float percent;//百分比
+                JSONArray channels_jsonArray =new JSONObject(jsonString).getJSONArray("channels");//取得 channels 列表的陣列
 
-                //掃過所有feed取得最大值 和最大值除以最後一個feed值的百分比
-                for (int i = 0; i < jsonArray.length();i++){
-                    if (Integer.parseInt(jsonArray.getJSONObject(i).getString("field1")) > max) {
-                        max=Integer.parseInt(jsonArray.getJSONObject(i).getString("field1"));
+                channel_total=channels_jsonArray.length();//取得 channel 數量
+                channel_info = new int[channel_total][4];
+
+                for (int i =0;i<channel_total;i++){
+                    channel_info[i][0]=channels_jsonArray.getJSONObject(i).getInt("id");//取得第 i 個 channel 的 ID
+
+                    URL tmp_url = new URL("https://api.thingspeak.com/channels/"+channel_info[i][0]+"/feeds.json");//取得第 i 個 channel 的 feed 的列表的網址
+                    conn= (HttpURLConnection) tmp_url.openConnection();
+                    conn.connect();
+                    reader= new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"));
+                    jsonString=reader.readLine();
+                    reader.close();
+                    conn.disconnect();
+
+                    JSONArray channel_feeds_jsonArray =new JSONObject(jsonString).getJSONArray("feeds");//取得 channel_feeds 列表的陣列
+
+                    for (int j = 0;j<channel_feeds_jsonArray.length();j++){
+                        if (channel_info[i][1]<channel_feeds_jsonArray.getJSONObject(j).getInt("field1")){
+                            channel_info[i][1]=channel_feeds_jsonArray.getJSONObject(j).getInt("field1");
+                        }
                     }
+                    channel_info[i][2]=channel_feeds_jsonArray.getJSONObject(channel_feeds_jsonArray.length()-1).getInt("field1");
+                    channel_info[i][3]=(int)(((float) channel_info[i][2]/channel_info[i][1])*100);
+                    //Log.d("channel_ID", i+"_"+channel_info[i][0]);
+                    //Log.d("channel_max", i+"_"+channel_info[i][1]);
+                    //Log.d("channel_last", i+"_"+channel_info[i][2]);
+                    //Log.d("channel_percent", i+"_"+channel_info[i][3]);
                 }
-                percent=(float) Integer.parseInt(jsonArray.getJSONObject(jsonArray.length()-1).getString("field1"))/max*100;
-                //endregion
-
-                //Log.d("Tag_in:",jsonArray.getJSONObject(1).getString("field1"));
+                //Log.d("channel_num", String.valueOf(channels_jsonArray.length()));
                 Object[] res = new Object[2];
-                res[0]=max;
-                res[1]=percent;
+
                 return res;
 
             } catch (Exception e) {
@@ -209,16 +229,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Object[] res) {
             super.onPostExecute(res);
-            //res[0] 是最大值 ->Integer型態
-            //res[1] 是最後一個feed值和最大值得相除 ->float型態
-            Log.d("max=",res[0].toString());
-            Log.d("percent=",res[1].toString());
-            //可以在這裡使用res[0]和res[1]去改變UI的值
-            if(item.size()>0){
-                item.set(count,item.get(count)+"          "+res[1]+"%");
-                listinput.setAdapter(adapter);
-                ++count;
-            }//在list後面顯示%數
         }
     }
 
