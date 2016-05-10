@@ -9,50 +9,10 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.nutccsie.nutc_fds.MainActivity">
 
-    <Button
+    <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="設定"
-        android:id="@+id/button"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="新增"
-        android:id="@+id/button2"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="項目2"
-        android:id="@+id/button4"
-        android:layout_above="@+id/button5"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="40dp" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="項目3"
-        android:id="@+id/button5"
-        android:layout_centerVertical="true"
-        android:layout_alignLeft="@+id/button3"
-        android:layout_alignStart="@+id/button3" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="項目1"
-        android:id="@+id/button3"
-        android:layout_above="@+id/button4"
-        android:layout_alignLeft="@+id/button4"
-        android:layout_alignStart="@+id/button4"
-        android:layout_marginBottom="28dp" />
+        android:id="@+id/listView"
+        android:layout_alignParentTop="true" />
 
 </RelativeLayout>

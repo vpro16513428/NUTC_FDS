@@ -7,10 +7,18 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,39 +31,21 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private EditText inputText;
+    private ListView listinput;
+    private ArrayAdapter<String> adapter;
+    private ArrayList<String> item;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Button Button3 = (Button)findViewById(R.id.button3);
-        final Button Button4 = (Button)findViewById(R.id.button4);
-        final Button Button5 = (Button)findViewById(R.id.button5);
-        Button3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Reset();
-            }
-        });
-        Button4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Reset();
-            }
-        });
-        Button5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Reset();
-            }
-        });//AlertDialog
-
-        Button button = (Button)findViewById(R.id.button);
-        button.setOnClickListener(new Button.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                jumptoSet();
-            }
-        });
+        inputText =(EditText)findViewById(R.id.edit);
+        listinput = (ListView)findViewById(R.id.listView);
+        item = new ArrayList<String>();
+        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
+        listinput.setAdapter(adapter);
+        //AlertDialog
 
         new getjson().execute();//下這一行getjson才會做動作
     }
@@ -66,42 +56,49 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }// ActionBar
 
-    private void Reset(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Are you want to reset？").setPositiveButton("No", new DialogInterface.OnClickListener(){
-            @Override
-            public void onClick(DialogInterface dialog, int which){
-               dialog.cancel();
-            }}).setNegativeButton("Yes",new DialogInterface.OnClickListener(){
-            @Override
-            public void onClick(DialogInterface dialog, int which){
-                dialog.cancel();
-            }
-        });
-        AlertDialog reset_dialog = builder.create();
-        reset_dialog.show();
-    }//AlertDialog
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.action_add:
+                openOptionsDialog();
+                return true;
+            case R.id.action_delete:
 
-    public void jumptoSet(){
-        setContentView(R.layout.set);
-        Button button6 = (Button)findViewById(R.id.button6);
-        button6.setOnClickListener(new  Button.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                jumptoMain();
-            }
-        });
-    }
-    public void jumptoMain(){
-        setContentView(R.layout.activity_main);
-        Button button = (Button)findViewById(R.id.button);
-        button.setOnClickListener(new Button.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                jumptoSet();
-            }
-        });
+                return true;
+            case R.id.action_settings:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }//讓ActionBar按鈕有動作
 
+    private void openOptionsDialog(){
+        LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+        final View v = inflater.inflate(R.layout.sec_activity, null);
+        final EditText inputText = (EditText)v.findViewById(R.id.edit);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("請輸入名稱或代稱")
+                .setView(v)
+                .setPositiveButton("取消",
+                        new  DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog,int which){
+                                dialog.cancel();
+                            }
+                        }).setNegativeButton("確定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (!inputText.getText().toString().equals("")){
+                            item.add(inputText.getText().toString());
+                            inputText.setText("");
+                            listinput.setAdapter(adapter);
+                        }
+                    }
+                }).create().show();
+    }//用AlertDialog的方式以EditText新增到Button
+
+    public EditText getInputText() {
+        return inputText;
     }
 
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
@@ -149,12 +146,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("max=",res[0].toString());
             Log.d("percent=",res[1].toString());
             //可以在這裡使用res[0]和res[1]去改變UI的值
-            Button Button3 = (Button)findViewById(R.id.button3);
-            Button3.setText(Button3.getText().toString()+"     "+(res[1].toString().substring(0,res[1].toString().indexOf(".")+3))+"%");
-            //Button3.setText(String.format("%s%s", Button3.getText().toString(), res[1].toString()));
         }
     }
 
 }
-
 
