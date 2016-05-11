@@ -5,11 +5,11 @@
     android:orientation="vertical">
 
     <TextView
-        android:textSize="100sp"
+        android:textSize="50sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="提醒"
+        android:text="Warning"
         android:id="@+id/textView"
         android:layout_gravity="left|center_horizontal"
         android:layout_weight="0.25" />
@@ -22,15 +22,24 @@
         android:layout_gravity="center_vertical" />
 
     <TextView
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="0"
+        android:id="@+id/textView3"
+        android:layout_gravity="left|center_horizontal"
+        android:layout_weight="0.25" />
+
+    <TextView
         android:textSize="50sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="警示"
+        android:text="Alert"
         android:id="@+id/textView2"
         android:layout_gravity="left|center_horizontal"
         android:layout_weight="0.25" />
-
 
 
     <SeekBar
@@ -38,5 +47,15 @@
         android:layout_height="wrap_content"
         android:id="@+id/seekBar2"
         android:layout_weight="1" />
+
+    <TextView
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="0"
+        android:id="@+id/textView4"
+        android:layout_gravity="left|center_horizontal"
+        android:layout_weight="0.25" />
 
 </LinearLayout>

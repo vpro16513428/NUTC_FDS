@@ -3,6 +3,7 @@ package com.nutccsie.nutc_fds;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.preference.DialogPreference;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -36,6 +38,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Set;
 
+
 public class MainActivity extends AppCompatActivity {
 
     int channel_total=0;
@@ -44,18 +47,19 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputText;
     private ListView listinput;
     private ArrayAdapter<String> adapter;
+    private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0 , y=0;
+    int count = 0 , y = 0 , red_warn = 0 , yellow_warn = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<String>();
-        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
-        listinput.setAdapter(adapter);
+        //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
+        testadp_test = new testadp(this,item);
+        listinput.setAdapter(testadp_test);
         //AlertDialog
-
         new getjson().execute();//下這一行getjson才會做動作
     }
 
@@ -81,11 +85,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }//讓ActionBar按鈕有動作
 
+    private  void refresharraylist(){
+        for (int i=0 ; i<count ; i++){
+            if (channel_info[i][3]<red_warn){
+            }
+            if (channel_info[i][3]<yellow_warn){
+            }
+        }
+    }
+
     private void openadd(){
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.add_activity, null);
         final EditText inputText = (EditText)v.findViewById(R.id.edit);
         final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
+        new getjson().execute();
             new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
@@ -100,11 +114,21 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (!inputText.getText().toString().equals("")){
-                                    item.add(inputText.getText().toString()+"        "+channel_info[Integer.parseInt(inputText2.getText().toString())][3] + "%");
-                                    inputText.setText("");
-                                    listinput.setAdapter(adapter);
-                                    ++count;
+                                if (!inputText.getText().toString().equals("") && !inputText2.getText().toString().equals("")){
+                                    char ch[] = inputText2.getText().toString().toCharArray();
+                                    for (int i=0 ; i < inputText2.getText().length(); i++){
+                                        if (!Character.isDigit(ch[i])){
+                                            break;
+                                        }else if ((Integer.parseInt(inputText2.getText().toString())>4)){
+                                            item.add(inputText.getText().toString() + "        " + channel_info[0][3] + "%");
+                                        }else {
+                                            item.add(inputText.getText().toString() + "        " + channel_info[Integer.parseInt(inputText2.getText().toString())][3] + "%");
+                                        }
+                                        inputText.setText("");
+                                        listinput.setAdapter(testadp_test);
+                                        ++count;
+                                    }
+
                                 }
                             }
                         })
@@ -140,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 item.remove(y);
-                                adapter.notifyDataSetChanged();
+                                testadp_test.notifyDataSetChanged();
                                 count--;
                             }
                         })
@@ -152,30 +176,57 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.setting_activity, null);
         final TextView text = (TextView) v.findViewById(R.id.textView);
-        final SeekBar sweekbar = (SeekBar)v.findViewById(R.id.seekBar);
+        final SeekBar seekbar = (SeekBar)v.findViewById(R.id.seekBar);
+        final TextView text3 = (TextView) v.findViewById(R.id.textView3);
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
-        final SeekBar sweekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("設定")
+        final SeekBar seekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
+        final TextView text4 = (TextView) v.findViewById(R.id.textView4);
+        seekbar.setProgress(yellow_warn);
+        seekbar2.setProgress(red_warn);
+        text3.setText(yellow_warn+"%");
+        text4.setText(red_warn+"%");
+        final AlertDialog.Builder setting = new AlertDialog.Builder(this);
+        setting.setTitle("設定")
                 .setView(v)
-                .setPositiveButton("取消",
+                .setPositiveButton("離開",
                         new  DialogInterface.OnClickListener(){
                             @Override
                             public void onClick(DialogInterface dialog,int which){
                                 dialog.cancel();
                             }
-                        })
-                .setNegativeButton("確定",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                        })
-                .create().show();
+                        });
+        seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            public void onProgressChanged(SeekBar seekBar, int progressV, boolean fromUser) {
+                progress = progressV;
+                text3.setText((progress) + "%");
+                yellow_warn = progress;
+                testadp_test.setYellowWarnValue(yellow_warn);
+                testadp_test.notifyDataSetChanged();
+            }
+            public void onStartTrackingTouch(SeekBar arg0) {
+            }
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                refresharraylist();
+            }
+        });
+        seekbar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            public void onProgressChanged(SeekBar seekBar2, int progressV, boolean fromUser) {
+                progress = progressV;
+                text4.setText((progress)+"%");
+                red_warn = progress;
+                testadp_test.setRedWarnValue(red_warn);
+                testadp_test.notifyDataSetChanged();
+            }
+            public void onStartTrackingTouch(SeekBar arg0) {
+            }
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        setting.create().show();
     }//set使用AlertDialog的方式顯示SeekBar
-
-
 
     protected class getjson extends AsyncTask<Void, Void, Object[]> {
         @Override
