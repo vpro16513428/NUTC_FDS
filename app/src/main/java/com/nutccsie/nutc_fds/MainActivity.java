@@ -1,5 +1,6 @@
 package com.nutccsie.nutc_fds;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
@@ -21,11 +22,14 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -41,12 +45,11 @@ public class MainActivity extends AppCompatActivity {
     private ListView listinput;
     private ArrayAdapter<String> adapter;
     private ArrayList<String> item;
-    int count = 0;
+    int count = 0 , y=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        inputText =(EditText)findViewById(R.id.edit);
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<String>();
         adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
             case R.id.action_add:
-                openOptionsDialog();
+                openadd();
                 return true;
             case R.id.action_delete:
                 opendelete();
@@ -78,10 +81,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }//讓ActionBar按鈕有動作
 
-    private void openOptionsDialog(){
+    private void openadd(){
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-        final View v = inflater.inflate(R.layout.sec_activity, null);
+        final View v = inflater.inflate(R.layout.add_activity, null);
         final EditText inputText = (EditText)v.findViewById(R.id.edit);
+        final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
             new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
@@ -97,9 +101,10 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (!inputText.getText().toString().equals("")){
-                                    item.add(inputText.getText().toString());
+                                    item.add(inputText.getText().toString()+"        "+channel_info[Integer.parseInt(inputText2.getText().toString())][3] + "%");
                                     inputText.setText("");
-                                    new getjson().execute();
+                                    listinput.setAdapter(adapter);
+                                    ++count;
                                 }
                             }
                         })
@@ -111,19 +116,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void opendelete(){
-        int y =0 ;
-        final String del ;
-        String[] str = new String[count];
+        final String[] str = new String[count];
         for(int i=0; i<count; i++) {
-            str[i] = item.set(i,item.get(i));
-            y++;
+            str[i] = item.get(i);
         }
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("刪除")
-                .setSingleChoiceItems(str, 0, new DialogInterface.OnClickListener() {
+                .setSingleChoiceItems(str, -1, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        y = which;
                     }
                 })
                 .setPositiveButton("取消",
@@ -137,21 +139,24 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                    
+                                item.remove(y);
+                                adapter.notifyDataSetChanged();
+                                count--;
                             }
                         })
                 .show();
+
     }//用AlertDialog的方式以EditText新增到listview
 
     private void opensetting(){
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.setting_activity, null);
-        final View w = inflater.inflate(R.layout.setting_activity, null);
-        final SeekBar seekBar = (SeekBar)v.findViewById(R.id.seekBar);
-        final SeekBar seekBar1 = (SeekBar)w.findViewById(R.id.seekBar2);
+        final TextView text = (TextView) v.findViewById(R.id.textView);
+        final SeekBar sweekbar = (SeekBar)v.findViewById(R.id.seekBar);
+        final TextView text2 = (TextView) v.findViewById(R.id.textView2);
+        final SeekBar sweekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("設定")
-                .setMessage("123")
                 .setView(v)
                 .setPositiveButton("取消",
                         new  DialogInterface.OnClickListener(){
@@ -164,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
+                                    dialog.cancel();
+                                }
                         })
                 .create().show();
     }//set使用AlertDialog的方式顯示SeekBar
@@ -210,10 +215,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     channel_info[i][2]=channel_feeds_jsonArray.getJSONObject(channel_feeds_jsonArray.length()-1).getInt("field1");
                     channel_info[i][3]=(int)(((float) channel_info[i][2]/channel_info[i][1])*100);
-                    //Log.d("channel_ID", i+"_"+channel_info[i][0]);
-                    //Log.d("channel_max", i+"_"+channel_info[i][1]);
-                    //Log.d("channel_last", i+"_"+channel_info[i][2]);
-                    //Log.d("channel_percent", i+"_"+channel_info[i][3]);
+                    Log.d("channel_ID", i+"_"+channel_info[i][0]);
+                    Log.d("channel_max", i+"_"+channel_info[i][1]);
+                    Log.d("channel_last", i+"_"+channel_info[i][2]);
+                    Log.d("channel_percent", i+"_"+channel_info[i][3]);
                 }
                 //Log.d("channel_num", String.valueOf(channels_jsonArray.length()));
                 Object[] res = new Object[2];
