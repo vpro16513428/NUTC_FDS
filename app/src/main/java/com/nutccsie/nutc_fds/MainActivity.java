@@ -31,12 +31,17 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Set;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -46,10 +51,20 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText inputText;
     private ListView listinput;
-    private ArrayAdapter<String> adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0 , y = 0 , red_warn = 0 , yellow_warn = 0;
+    int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
+
+    SQLiteDatabase db;
+    //資料庫名
+    public String db_name = "SQLite";
+
+    //表名
+    public String table_name = "ListChannel";
+
+    //輔助類名
+    MyDBHelper SQLite = new MyDBHelper(MainActivity.this, db_name);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
         testadp_test = new testadp(this,item);
         listinput.setAdapter(testadp_test);
-        //AlertDialog
+        db = SQLite.getReadableDatabase();
         new getjson().execute();//下這一行getjson才會做動作
     }
 
@@ -84,15 +99,6 @@ public class MainActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }//讓ActionBar按鈕有動作
-
-    private  void refresharraylist(){
-        for (int i=0 ; i<count ; i++){
-            if (channel_info[i][3]<red_warn){
-            }
-            if (channel_info[i][3]<yellow_warn){
-            }
-        }
-    }
 
     private void openadd(){
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -194,6 +200,13 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog,int which){
                                 dialog.cancel();
                             }
+                        })
+                .setNegativeButton("確定",
+                        new  DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog,int which){
+                                dialog.cancel();
+                            }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress = 0;
@@ -207,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar arg0) {
             }
             public void onStopTrackingTouch(SeekBar seekBar) {
-                refresharraylist();
             }
         });
         seekbar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -222,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar arg0) {
             }
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
         setting.create().show();
@@ -281,7 +292,6 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
         }
-
         @Override
         protected void onPostExecute(Object[] res) {
             super.onPostExecute(res);
