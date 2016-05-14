@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     private testadp testadp_test;
     private ArrayList<String> item;
     int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
-
     SQLiteDatabase db;
     //資料庫名
     public String db_name = "SQLite";
