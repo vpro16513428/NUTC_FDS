@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         //TSW.editChannel("116139","Updated Channel");
         //TSW.resetChannel("116139");
         //TSW.deleteChannel("116139");
-        TSW.percentChannel("96545");
+        //TSW.percentChannel("96545");
         db = SQLite.getReadableDatabase();
 
     }
@@ -339,12 +339,11 @@ public class MainActivity extends AppCompatActivity {
                 case 4://percent
                     map = null;
 
-                    //HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
-                    HUCW = new HttpURLConnection_WORK("http://httpbin.org/ip", map);
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
                     JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
-                    Log.d("IN","IN");
-                    Log.e("JSONstr",JSONstr);
-                    int max=0,last=0,num=0;
+
+                    int num=0;
+                    float max=0,last=0;
                     try {
                         result = new JSONObject(JSONstr);
                         num=result.getJSONArray("feeds").length();
@@ -354,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         last=result.getJSONArray("feeds").getJSONObject(num-1).getInt("field1");
-                        Channel_percent= String.valueOf((last/max));
+                        Channel_percent= String.valueOf(last/max*100);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
