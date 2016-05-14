@@ -1,7 +1,6 @@
 package com.nutccsie.nutc_fds;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
@@ -17,29 +16,14 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.Set;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     String Channel_name="";
     String Channel_ID="";
     String Channel_APIKEY="";
+    String Channel_percent="";
 
     private EditText inputText;
     private ListView listinput;
@@ -81,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         //TSW.editChannel("116139","Updated Channel");
         //TSW.resetChannel("116139");
         //TSW.deleteChannel("116139");
+        TSW.percentChannel("96545");
         db = SQLite.getReadableDatabase();
 
     }
@@ -283,6 +269,11 @@ public class MainActivity extends AppCompatActivity {
             this.execute(3);
         }
 
+        void percentChannel(String ID){
+            Channel_ID=ID;
+            this.execute(4);
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -303,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                     //new
                     map.put("name", Channel_name);
                     map.put("api_key", User_APIKEY);
+                    map.put("public_flag","true");
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels.json", map);
                     JSONstr = HUCW.sendHttpURLConnectionRequest("POST");
@@ -343,6 +335,29 @@ public class MainActivity extends AppCompatActivity {
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
                     HUCW.sendHttpURLConnectionRequest("DELETE");
 
+                    break;
+                case 4://percent
+                    map = null;
+
+                    //HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
+                    HUCW = new HttpURLConnection_WORK("http://httpbin.org/ip", map);
+                    JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
+                    Log.d("IN","IN");
+                    Log.e("JSONstr",JSONstr);
+                    int max=0,last=0,num=0;
+                    try {
+                        result = new JSONObject(JSONstr);
+                        num=result.getJSONArray("feeds").length();
+                        for (int i=0;i<num;i++){
+                            if (max<result.getJSONArray("feeds").getJSONObject(i).getInt("field1")){
+                                max=result.getJSONArray("feeds").getJSONObject(i).getInt("field1");
+                            }
+                        }
+                        last=result.getJSONArray("feeds").getJSONObject(num-1).getInt("field1");
+                        Channel_percent= String.valueOf((last/max));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     break;
             }
             publishProgress(100);
