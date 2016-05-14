@@ -1,11 +1,9 @@
 package com.nutccsie.nutc_fds;
 
-import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.AsyncTask;
-import android.preference.DialogPreference;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,34 +13,34 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Set;
-
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
     int channel_total=0;
-    int[][] channel_info;// [0] ID , [1] MAX , [2] LAST , [3] Percent
+    int[][] channel_info;// [0] ID ,  [1] APIKEY , [2] MAX , [3] LAST , [4] Percent
+    String User_APIKEY="RO28U1DJSWQB8Q3L";
+    String Channel_name="";
+    String Channel_ID="";
+    String Channel_APIKEY="";
 
     private EditText inputText;
     private ListView listinput;
@@ -50,17 +48,22 @@ public class MainActivity extends AppCompatActivity {
     private testadp testadp_test;
     private ArrayList<String> item;
     int count = 0 , y = 0 , red_warn = 0 , yellow_warn = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listinput = (ListView)findViewById(R.id.listView);
-        item = new ArrayList<String>();
+        item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
         testadp_test = new testadp(this,item);
         listinput.setAdapter(testadp_test);
         //AlertDialog
-        new getjson().execute();//下這一行getjson才會做動作
+        ThingSpeakWork TSW = new ThingSpeakWork();
+        //TSW.newChannel("My New Channel");
+        //TSW.editChannel("116139","Updated Channel");
+        //TSW.resetChannel("116139");
+        //TSW.deleteChannel("116139");
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         final View v = inflater.inflate(R.layout.add_activity, null);
         final EditText inputText = (EditText)v.findViewById(R.id.edit);
         final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
-        new getjson().execute();
+
             new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
@@ -228,65 +231,115 @@ public class MainActivity extends AppCompatActivity {
         setting.create().show();
     }//set使用AlertDialog的方式顯示SeekBar
 
-    protected class getjson extends AsyncTask<Void, Void, Object[]> {
-        @Override
-        protected Object[] doInBackground(Void... params) {
-            try {
+    public class ThingSpeakWork extends AsyncTask<Integer, Integer, Void> {
+        private ProgressDialog progressBar;
+        HttpURLConnection_WORK HUCW=null;
+        String JSONstr=null;
+        JSONObject result=null;
+        HashMap<String,String> map=null;
 
-                URL url = new URL("https://api.thingspeak.com/users/vpro16513428/channels.json");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.connect();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-                String jsonString= reader.readLine();
-                reader.close();
-                conn.disconnect();
+        void newChannel(String name){
+            Channel_name=name;
+            this.execute(0);
+        }
 
-                JSONArray channels_jsonArray =new JSONObject(jsonString).getJSONArray("channels");//取得 channels 列表的陣列
+        void editChannel(String ID,String name){
+            Channel_ID=ID;
+            Channel_name=name;
+            this.execute(1);
+        }
 
-                channel_total=channels_jsonArray.length();//取得 channel 數量
-                channel_info = new int[channel_total][4];
+        void resetChannel(String ID){
+            Channel_ID=ID;
+            this.execute(2);
+        }
 
-                for (int i =0;i<channel_total;i++){
-                    channel_info[i][0]=channels_jsonArray.getJSONObject(i).getInt("id");//取得第 i 個 channel 的 ID
-
-                    URL tmp_url = new URL("https://api.thingspeak.com/channels/"+channel_info[i][0]+"/feeds.json");//取得第 i 個 channel 的 feed 的列表的網址
-                    conn= (HttpURLConnection) tmp_url.openConnection();
-                    conn.connect();
-                    reader= new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"));
-                    jsonString=reader.readLine();
-                    reader.close();
-                    conn.disconnect();
-
-                    JSONArray channel_feeds_jsonArray =new JSONObject(jsonString).getJSONArray("feeds");//取得 channel_feeds 列表的陣列
-
-                    for (int j = 0;j<channel_feeds_jsonArray.length();j++){
-                        if (channel_info[i][1]<channel_feeds_jsonArray.getJSONObject(j).getInt("field1")){
-                            channel_info[i][1]=channel_feeds_jsonArray.getJSONObject(j).getInt("field1");
-                        }
-                    }
-                    channel_info[i][2]=channel_feeds_jsonArray.getJSONObject(channel_feeds_jsonArray.length()-1).getInt("field1");
-                    channel_info[i][3]=(int)(((float) channel_info[i][2]/channel_info[i][1])*100);
-                    Log.d("channel_ID", i+"_"+channel_info[i][0]);
-                    Log.d("channel_max", i+"_"+channel_info[i][1]);
-                    Log.d("channel_last", i+"_"+channel_info[i][2]);
-                    Log.d("channel_percent", i+"_"+channel_info[i][3]);
-                }
-                //Log.d("channel_num", String.valueOf(channels_jsonArray.length()));
-                Object[] res = new Object[2];
-
-                return res;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+        void deleteChannel(String ID){
+            Channel_ID=ID;
+            this.execute(3);
         }
 
         @Override
-        protected void onPostExecute(Object[] res) {
-            super.onPostExecute(res);
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar = new ProgressDialog(MainActivity.this);
+            progressBar.setMessage("Loading...");
+            progressBar.setCancelable(false);
+            progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressBar.show();
+            //初始化進度條並設定樣式及顯示的資訊。
+        }
+
+        @Override
+        protected Void doInBackground(Integer... params) {
+            publishProgress(0);
+            switch (params[0]) {
+                case 0://new
+                    map = new HashMap<>();
+                    //new
+                    map.put("name", Channel_name);
+                    map.put("api_key", User_APIKEY);
+
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels.json", map);
+                    JSONstr = HUCW.sendHttpURLConnectionRequest("POST");
+
+                    try {
+                        result = new JSONObject(JSONstr);
+                        Channel_ID = String.valueOf(result.getInt("id"));
+                        Channel_APIKEY = result.getJSONArray("api_keys").getJSONObject(0).getString("api_key");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case 1://edit
+                    map = new HashMap<>();
+                    //edit
+                    map.put("name", Channel_name);
+                    map.put("api_key", User_APIKEY);
+
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
+                    HUCW.sendHttpURLConnectionRequest("PUT");
+
+                    break;
+                case 2://reset
+                    map = new HashMap<>();
+                    //edit
+                    map.put("api_key", User_APIKEY);
+
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
+                    HUCW.sendHttpURLConnectionRequest("DELETE");
+
+                    break;
+                case 3://delete
+                    map = new HashMap<>();
+                    //edit
+                    map.put("api_key", User_APIKEY);
+
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
+                    HUCW.sendHttpURLConnectionRequest("DELETE");
+
+                    break;
+            }
+            publishProgress(100);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            progressBar.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progressBar.dismiss();
+            HUCW = null;
+            JSONstr = null;
+            result = null;
+            map = null;//設null防止佔用過多記憶體
         }
     }
-
 }
 
