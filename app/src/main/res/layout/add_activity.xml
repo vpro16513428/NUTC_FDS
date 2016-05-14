@@ -9,7 +9,8 @@
         android:layout_width="fill_parent"
         android:id="@+id/edit"
         android:singleLine="true"
-        android:inputType="" />
+        android:inputType=""
+        android:hint="物品名稱 EX:洗髮精"/>
 
     <EditText
         android:layout_height="wrap_content"

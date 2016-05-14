@@ -58,4 +58,12 @@
         android:layout_gravity="left|center_horizontal"
         android:layout_weight="0.25" />
 
+    <EditText
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:id="@+id/edit"
+        android:singleLine="true"
+        android:inputType=""
+        android:hint="輸入您的User_APIKey"/>
+
 </LinearLayout>

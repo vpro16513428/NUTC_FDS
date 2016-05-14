@@ -23,6 +23,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
@@ -32,6 +36,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.Set;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,7 +55,17 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0 , y = 0 , red_warn = 0 , yellow_warn = 0;
+    int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
+
+    SQLiteDatabase db;
+    //資料庫名
+    public String db_name = "SQLite";
+
+    //表名
+    public String table_name = "ListChannel";
+
+    //輔助類名
+    MyDBHelper SQLite = new MyDBHelper(MainActivity.this, db_name);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
         //TSW.editChannel("116139","Updated Channel");
         //TSW.resetChannel("116139");
         //TSW.deleteChannel("116139");
+        db = SQLite.getReadableDatabase();
+
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -197,6 +217,13 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog,int which){
                                 dialog.cancel();
                             }
+                        })
+                .setNegativeButton("確定",
+                        new  DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog,int which){
+                                dialog.cancel();
+                            }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress = 0;
@@ -210,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar arg0) {
             }
             public void onStopTrackingTouch(SeekBar seekBar) {
-                refresharraylist();
             }
         });
         seekbar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -225,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar arg0) {
             }
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
         setting.create().show();
