@@ -3,6 +3,7 @@ package com.nutccsie.nutc_fds;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.support.annotation.StringDef;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,6 +29,12 @@ import com.nutccsie.nutc_fds.task.__IEsptouchTask;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
     String Channel_ID="";
     String Channel_APIKEY="";
     String Channel_percent="";
+    String Sensor_IP="";
+    Socket socket = null;
+    TextView textResponse;
 
     private EditText inputText;
     private ListView listinput;
@@ -199,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
         final SeekBar seekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
         final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
+        final Button set_btn = (Button) v.findViewById(R.id.Set_sensor_button);
         seekbar.setProgress(yellow_warn);
         seekbar2.setProgress(red_warn);
         text3.setText(yellow_warn+"%");
@@ -326,6 +337,59 @@ public class MainActivity extends AppCompatActivity {
                 scn.create().show();
             }
         });
+
+        set_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+                final View set_v = inflater.inflate(R.layout.socket_activity, null);
+
+                final TextView txtSend;
+                final EditText editTextAddress, editTextPort;
+                final Button buttonConnect,buttonSend;
+
+                editTextAddress = (EditText) set_v.findViewById(R.id.address);
+                editTextAddress.setText(Sensor_IP);
+                editTextPort = (EditText) set_v.findViewById(R.id.port);
+                buttonConnect = (Button) set_v.findViewById(R.id.connect);
+                textResponse = (TextView) set_v.findViewById(R.id.response);
+                buttonSend = (Button) set_v.findViewById(R.id.send_btn);
+                txtSend = (TextView) set_v.findViewById(R.id.txtSend);
+
+                buttonConnect.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (v == buttonConnect) {
+                            MyClient_connect_Task myClientTask = new MyClient_connect_Task(editTextAddress.getText().toString(), Integer.parseInt(editTextPort.getText().toString()));
+                            myClientTask.execute();
+                        }
+                    }
+                });
+                buttonSend.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (v == buttonSend) {
+                            MyClient_send_Task myClient_send_task =new MyClient_send_Task();
+                            myClient_send_task.execute(txtSend.getText().toString());
+                        }
+                    }
+                });
+
+                final AlertDialog.Builder set = new AlertDialog.Builder(MainActivity.this);
+                set.setTitle("Set Sensor")
+                        .setView(set_v)
+                        .setPositiveButton("離開",
+                                new  DialogInterface.OnClickListener(){
+                                    @Override
+                                    public void onClick(DialogInterface dialog,int which){
+                                        dialog.cancel();
+                                    }
+                                });
+
+                set.create().show();
+            }
+        });
+
         setting.create().show();
     }//set使用AlertDialog的方式顯示SeekBar
 
@@ -469,84 +533,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class EsptouchAsyncTask2 extends AsyncTask<String, Void, IEsptouchResult> {
-
-        private ProgressDialog mProgressDialog;
-
-        private IEsptouchTask mEsptouchTask;
-        // without the lock, if the user tap confirm and cancel quickly enough,
-        // the bug will arise. the reason is follows:
-        // 0. task is starting created, but not finished
-        // 1. the task is cancel for the task hasn't been created, it do nothing
-        // 2. task is created
-        // 3. Oops, the task should be cancelled, but it is running
-        private final Object mLock = new Object();
-
-        @Override
-        protected void onPreExecute() {
-            mProgressDialog = new ProgressDialog(MainActivity.this);
-            mProgressDialog
-                    .setMessage("Esptouch is configuring, please wait for a moment...");
-            mProgressDialog.setCanceledOnTouchOutside(false);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    synchronized (mLock) {
-                        if (__IEsptouchTask.DEBUG) {
-                            Log.i("test", "progress dialog is canceled");
-                        }
-                        if (mEsptouchTask != null) {
-                            mEsptouchTask.interrupt();
-                        }
-                    }
-                }
-            });
-            mProgressDialog.setButton(DialogInterface.BUTTON_POSITIVE,
-                    "Waiting...", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    });
-            mProgressDialog.show();
-            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-                    .setEnabled(false);
-        }
-
-        @Override
-        protected IEsptouchResult doInBackground(String... params) {
-            synchronized (mLock) {
-                String apSsid = params[0];
-                String apBssid = params[1];
-                String apPassword = params[2];
-                String isSsidHiddenStr = params[3];
-                boolean isSsidHidden = false;
-                if (isSsidHiddenStr.equals("YES")) {
-                    isSsidHidden = true;
-                }
-                mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword, isSsidHidden, MainActivity.this);
-            }
-            IEsptouchResult result = mEsptouchTask.executeForResult();
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(IEsptouchResult result) {
-            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-                    .setEnabled(true);
-            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE).setText(
-                    "Confirm");
-            // it is unnecessary at the moment, add here just to show how to use isCancelled()
-            if (!result.isCancelled()) {
-                if (result.isSuc()) {
-                    mProgressDialog.setMessage("Esptouch success, bssid = "
-                            + result.getBssid() + ",InetAddress = "
-                            + result.getInetAddress().getHostAddress());
-                } else {
-                    mProgressDialog.setMessage("Esptouch fail");
-                }
-            }
-        }
-    }
 
     private void onEsptoucResultAddedPerform(final IEsptouchResult result) {
         runOnUiThread(new Runnable() {
@@ -657,6 +643,8 @@ public class MainActivity extends AppCompatActivity {
                                 + ",InetAddress = "
                                 + resultInList.getInetAddress()
                                 .getHostAddress() + "\n");
+                        Sensor_IP=Sensor_IP+resultInList.getInetAddress();
+                        Toast.makeText(MainActivity.this, Sensor_IP, Toast.LENGTH_LONG).show();
                         count++;
                         if (count >= maxDisplayCount) {
                             break;
@@ -672,6 +660,99 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    public class MyClient_connect_Task extends AsyncTask<Void, Void, Void> {
+
+        String dstAddress;
+        int dstPort;
+        String response = "";
+
+        MyClient_connect_Task(String addr, int port){
+            dstAddress = addr;
+            dstPort = port;
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            try {
+                Log.d("connectTask","connectTask");
+                socket = new Socket(dstAddress, dstPort);
+
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                response = "UnknownHostException: " + e.toString();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                response = "IOException: " + e.toString();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            textResponse.setText(response);
+            super.onPostExecute(result);
+        }
+
+    }
+
+
+    public class MyClient_send_Task extends AsyncTask<String, Void, Void> {
+        String response = "";
+
+        @Override
+        protected Void doInBackground(String... arg0) {
+            try {
+                Log.d("sendTask","sendTask");
+                byte[] data = arg0[0].getBytes("UTF-8");
+                OutputStream os = socket.getOutputStream();
+                os.write(data);
+
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024);
+                byte[] buffer = new byte[1024];
+
+                int bytesRead;
+                InputStream inputStream = socket.getInputStream();
+
+    /*
+     * notice:
+     * inputStream.read() will block if no data return
+     */
+                while ((bytesRead = inputStream.read(buffer)) != -1){
+                    byteArrayOutputStream.write(buffer, 0, bytesRead);
+                    response += byteArrayOutputStream.toString("UTF-8");
+                }
+
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                response = "UnknownHostException: " + e.toString();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                response = "IOException: " + e.toString();
+            }finally{
+                if(socket != null){
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            textResponse.setText(response);
+            super.onPostExecute(result);
+        }
+
     }
 }
 

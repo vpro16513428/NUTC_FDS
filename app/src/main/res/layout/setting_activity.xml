@@ -69,5 +69,10 @@
         android:layout_height="wrap_content"
         android:text="Scan Sensor"
         android:id="@+id/Scan_sensor_button" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Set Sensor"
+        android:id="@+id/Set_sensor_button" />
 
 </LinearLayout>
