@@ -38,6 +38,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         //TSW.resetChannel("116139");
         //TSW.deleteChannel("116139");
         //TSW.percentChannel("96545");
+        TSW.refresh();
         db = SQLite.getReadableDatabase();
 
     }
@@ -141,22 +143,8 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (!inputText.getText().toString().equals("") && !inputText2.getText().toString().equals("")){
-                                    char ch[] = inputText2.getText().toString().toCharArray();
-                                    for (int i=0 ; i < inputText2.getText().length(); i++){
-                                        if (!Character.isDigit(ch[i])){
-                                            break;
-                                        }else if ((Integer.parseInt(inputText2.getText().toString())>4)){
-                                            item.add(inputText.getText().toString() + "        " + channel_info[0][3] + "%");
-                                        }else {
-                                            item.add(inputText.getText().toString() + "        " + channel_info[Integer.parseInt(inputText2.getText().toString())][3] + "%");
-                                        }
-                                        inputText.setText("");
-                                        listinput.setAdapter(testadp_test);
-                                        ++count;
-                                    }
 
-                                }
+
                             }
                         })
                     .create().show();
@@ -269,15 +257,14 @@ public class MainActivity extends AppCompatActivity {
                 final TextView mTvApSsid;
                 final EditText mEdtApPassword;
                 final Button mBtnConfirm;
-                final Switch mSwitchIsSsidHidden;
                 final EspWifiAdminSimple mWifiAdmin;
-                final Spinner mSpinnerTaskCount;
+
 
                 mWifiAdmin = new EspWifiAdminSimple(MainActivity.this);
                 mTvApSsid = (TextView) scn_v.findViewById(R.id.tvApSssidConnected);
                 mEdtApPassword = (EditText) scn_v.findViewById(R.id.edtApPassword);
                 mBtnConfirm = (Button) scn_v.findViewById(R.id.btnConfirm);
-                mSwitchIsSsidHidden = (Switch) scn_v.findViewById(R.id.switchIsSsidHidden);
+
 
                 String apSsid = mWifiAdmin.getWifiConnectedSsid();
                 if (apSsid != null) {
@@ -286,18 +273,6 @@ public class MainActivity extends AppCompatActivity {
                     mTvApSsid.setText("");
                 }
 
-                mSpinnerTaskCount = (Spinner) scn_v.findViewById(R.id.spinnerTaskResultCount);
-                int[] spinnerItemsInt = getResources().getIntArray(R.array.taskResultCount);
-                int length = spinnerItemsInt.length;
-                Integer[] spinnerItemsInteger = new Integer[length];
-                for(int i=0;i<length;i++)
-                {
-                    spinnerItemsInteger[i] = spinnerItemsInt[i];
-                }
-                ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, spinnerItemsInteger);
-                mSpinnerTaskCount.setAdapter(adapter);
-                mSpinnerTaskCount.setSelection(1);
-
                 mBtnConfirm.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -305,9 +280,9 @@ public class MainActivity extends AppCompatActivity {
                             String apSsid = mTvApSsid.getText().toString();
                             String apPassword = mEdtApPassword.getText().toString();
                             String apBssid = mWifiAdmin.getWifiConnectedBssid();
-                            Boolean isSsidHidden = mSwitchIsSsidHidden.isChecked();
+                            Boolean isSsidHidden = false;
                             String isSsidHiddenStr = "NO";
-                            String taskResultCountStr = Integer.toString(mSpinnerTaskCount.getSelectedItemPosition());
+                            String taskResultCountStr = "1";
                             if (isSsidHidden)
                             {
                                 isSsidHiddenStr = "YES";
@@ -393,7 +368,7 @@ public class MainActivity extends AppCompatActivity {
         setting.create().show();
     }//set使用AlertDialog的方式顯示SeekBar
 
-    public class ThingSpeakWork extends AsyncTask<Integer, Integer, Void> {
+    public class ThingSpeakWork extends AsyncTask<Integer, Integer, Integer> {
         private ProgressDialog progressBar;
         HttpURLConnection_WORK HUCW=null;
         String JSONstr=null;
@@ -426,6 +401,10 @@ public class MainActivity extends AppCompatActivity {
             this.execute(4);
         }
 
+        void refresh(){
+            this.execute(5);
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -438,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Void doInBackground(Integer... params) {
+        protected Integer doInBackground(Integer... params) {
             publishProgress(0);
             switch (params[0]) {
                 case 0://new
@@ -459,8 +438,8 @@ public class MainActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    return 0;
 
-                    break;
                 case 1://edit
                     map = new HashMap<>();
                     //edit
@@ -469,8 +448,8 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
                     HUCW.sendHttpURLConnectionRequest("PUT");
+                    return 1;
 
-                    break;
                 case 2://reset
                     map = new HashMap<>();
                     //edit
@@ -478,8 +457,8 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
                     HUCW.sendHttpURLConnectionRequest("DELETE");
+                    return 2;
 
-                    break;
                 case 3://delete
                     map = new HashMap<>();
                     //edit
@@ -487,8 +466,8 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
                     HUCW.sendHttpURLConnectionRequest("DELETE");
+                    return 3;
 
-                    break;
                 case 4://percent
                     map = null;
 
@@ -510,7 +489,24 @@ public class MainActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    break;
+                    return 4;
+
+                case 5://refresh
+                    map = null;
+
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/users/vpro16513428/channels.json", map);
+                    JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
+
+
+                    try {
+                        result = new JSONObject(JSONstr);
+                        Channel_ID= String.valueOf(result.getJSONArray("channels").getJSONObject(0).getInt("id"));
+                        Channel_name=result.getJSONArray("channels").getJSONObject(0).getString("name");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    return 5;
+
             }
             publishProgress(100);
             return null;
@@ -523,8 +519,38 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        protected void onPostExecute(Integer method) {
+            super.onPostExecute(method);
+            switch (method){
+                case 0: //new
+
+                    break;
+                case 1: //edit
+
+                    break;
+                case 2: //reset
+
+                    break;
+                case 3: //delete
+
+                    break;
+                case 4: //percent
+
+                    break;
+                case 5: //refresh
+                    ThingSpeakWork mTSW =new ThingSpeakWork();
+                    mTSW.percentChannel(Channel_ID);
+                    try {
+                        mTSW.get();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                    item.add(Channel_name + "        " + Channel_percent + "%");
+                    testadp_test.notifyDataSetChanged();
+                    break;
+            }
             progressBar.dismiss();
             HUCW = null;
             JSONstr = null;
@@ -612,8 +638,7 @@ public class MainActivity extends AppCompatActivity {
                     isSsidHidden = true;
                 }
                 taskResultCount = Integer.parseInt(taskResultCountStr);
-                mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword,
-                        isSsidHidden, MainActivity.this);
+                mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword, isSsidHidden, MainActivity.this);
                 mEsptouchTask.setEsptouchListener(myListener);
             }
             List<IEsptouchResult> resultList = mEsptouchTask.executeForResults(taskResultCount);
@@ -645,14 +670,14 @@ public class MainActivity extends AppCompatActivity {
                                 .getHostAddress() + "\n");
                         Sensor_IP=Sensor_IP+resultInList.getInetAddress();
                         Toast.makeText(MainActivity.this, Sensor_IP, Toast.LENGTH_LONG).show();
+                        sb.append("Esptouch success, bssid = " + resultInList.getBssid() + ",InetAddress = " + resultInList.getInetAddress().getHostAddress() + "\n");
                         count++;
                         if (count >= maxDisplayCount) {
                             break;
                         }
                     }
                     if (count < result.size()) {
-                        sb.append("\nthere's " + (result.size() - count)
-                                + " more result(s) without showing\n");
+                        sb.append("\nthere's " + (result.size() - count) + " more result(s) without showing\n");
                     }
                     mProgressDialog.setMessage(sb.toString());
                 } else {
