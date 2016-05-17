@@ -11,8 +11,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Warning"
         android:id="@+id/textView"
-        android:layout_gravity="left|center_horizontal"
-        android:layout_weight="0.25" />
+        android:layout_gravity="left|center_horizontal" />
 
     <SeekBar
         android:layout_width="match_parent"
@@ -38,8 +37,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Alert"
         android:id="@+id/textView2"
-        android:layout_gravity="left|center_horizontal"
-        android:layout_weight="0.25" />
+        android:layout_gravity="left|center_horizontal" />
 
 
     <SeekBar
@@ -65,5 +63,11 @@
         android:singleLine="true"
         android:inputType=""
         android:hint="輸入您的User_APIKey"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan Sensor"
+        android:id="@+id/Scan_sensor_button" />
 
 </LinearLayout>

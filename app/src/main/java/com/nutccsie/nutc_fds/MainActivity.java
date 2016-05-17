@@ -13,17 +13,24 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.Toast;
+
+import com.nutccsie.nutc_fds.task.__IEsptouchTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
@@ -181,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
     }//用AlertDialog的方式以EditText新增到listview
 
     private void opensetting(){
-        LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+        final LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.setting_activity, null);
         final TextView text = (TextView) v.findViewById(R.id.textView);
         final SeekBar seekbar = (SeekBar)v.findViewById(R.id.seekBar);
@@ -189,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
         final SeekBar seekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
+        final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
         seekbar.setProgress(yellow_warn);
         seekbar2.setProgress(red_warn);
         text3.setText(yellow_warn+"%");
@@ -236,6 +246,84 @@ public class MainActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar arg0) {
             }
             public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        scn_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+                final View scn_v = inflater.inflate(R.layout.esptouch_demo_activity, null);
+
+                final String TAG = "EsptouchDemoActivity";
+                final TextView mTvApSsid;
+                final EditText mEdtApPassword;
+                final Button mBtnConfirm;
+                final Switch mSwitchIsSsidHidden;
+                final EspWifiAdminSimple mWifiAdmin;
+                final Spinner mSpinnerTaskCount;
+
+                mWifiAdmin = new EspWifiAdminSimple(MainActivity.this);
+                mTvApSsid = (TextView) scn_v.findViewById(R.id.tvApSssidConnected);
+                mEdtApPassword = (EditText) scn_v.findViewById(R.id.edtApPassword);
+                mBtnConfirm = (Button) scn_v.findViewById(R.id.btnConfirm);
+                mSwitchIsSsidHidden = (Switch) scn_v.findViewById(R.id.switchIsSsidHidden);
+
+                String apSsid = mWifiAdmin.getWifiConnectedSsid();
+                if (apSsid != null) {
+                    mTvApSsid.setText(apSsid);
+                } else {
+                    mTvApSsid.setText("");
+                }
+
+                mSpinnerTaskCount = (Spinner) scn_v.findViewById(R.id.spinnerTaskResultCount);
+                int[] spinnerItemsInt = getResources().getIntArray(R.array.taskResultCount);
+                int length = spinnerItemsInt.length;
+                Integer[] spinnerItemsInteger = new Integer[length];
+                for(int i=0;i<length;i++)
+                {
+                    spinnerItemsInteger[i] = spinnerItemsInt[i];
+                }
+                ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, spinnerItemsInteger);
+                mSpinnerTaskCount.setAdapter(adapter);
+                mSpinnerTaskCount.setSelection(1);
+
+                mBtnConfirm.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (v == mBtnConfirm) {
+                            String apSsid = mTvApSsid.getText().toString();
+                            String apPassword = mEdtApPassword.getText().toString();
+                            String apBssid = mWifiAdmin.getWifiConnectedBssid();
+                            Boolean isSsidHidden = mSwitchIsSsidHidden.isChecked();
+                            String isSsidHiddenStr = "NO";
+                            String taskResultCountStr = Integer.toString(mSpinnerTaskCount.getSelectedItemPosition());
+                            if (isSsidHidden)
+                            {
+                                isSsidHiddenStr = "YES";
+                            }
+                            if (__IEsptouchTask.DEBUG) {
+                                Log.d(TAG, "mBtnConfirm is clicked, mEdtApSsid = " + apSsid + ", " + " mEdtApPassword = " + apPassword);
+                            }
+                            new EsptouchAsyncTask3().execute(apSsid, apBssid, apPassword, isSsidHiddenStr, taskResultCountStr);
+                        }
+                    }
+                });
+
+
+
+
+                final AlertDialog.Builder scn = new AlertDialog.Builder(MainActivity.this);
+                scn.setTitle("ScanSensor")
+                        .setView(scn_v)
+                        .setPositiveButton("離開",
+                                new  DialogInterface.OnClickListener(){
+                                    @Override
+                                    public void onClick(DialogInterface dialog,int which){
+                                        dialog.cancel();
+                                    }
+                                });
+
+                scn.create().show();
             }
         });
         setting.create().show();
@@ -303,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
                         result = new JSONObject(JSONstr);
                         Channel_ID = String.valueOf(result.getInt("id"));
                         Channel_APIKEY = result.getJSONArray("api_keys").getJSONObject(0).getString("api_key");
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -377,6 +466,211 @@ public class MainActivity extends AppCompatActivity {
             JSONstr = null;
             result = null;
             map = null;//設null防止佔用過多記憶體
+        }
+    }
+
+    private class EsptouchAsyncTask2 extends AsyncTask<String, Void, IEsptouchResult> {
+
+        private ProgressDialog mProgressDialog;
+
+        private IEsptouchTask mEsptouchTask;
+        // without the lock, if the user tap confirm and cancel quickly enough,
+        // the bug will arise. the reason is follows:
+        // 0. task is starting created, but not finished
+        // 1. the task is cancel for the task hasn't been created, it do nothing
+        // 2. task is created
+        // 3. Oops, the task should be cancelled, but it is running
+        private final Object mLock = new Object();
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog
+                    .setMessage("Esptouch is configuring, please wait for a moment...");
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    synchronized (mLock) {
+                        if (__IEsptouchTask.DEBUG) {
+                            Log.i("test", "progress dialog is canceled");
+                        }
+                        if (mEsptouchTask != null) {
+                            mEsptouchTask.interrupt();
+                        }
+                    }
+                }
+            });
+            mProgressDialog.setButton(DialogInterface.BUTTON_POSITIVE,
+                    "Waiting...", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+            mProgressDialog.show();
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setEnabled(false);
+        }
+
+        @Override
+        protected IEsptouchResult doInBackground(String... params) {
+            synchronized (mLock) {
+                String apSsid = params[0];
+                String apBssid = params[1];
+                String apPassword = params[2];
+                String isSsidHiddenStr = params[3];
+                boolean isSsidHidden = false;
+                if (isSsidHiddenStr.equals("YES")) {
+                    isSsidHidden = true;
+                }
+                mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword, isSsidHidden, MainActivity.this);
+            }
+            IEsptouchResult result = mEsptouchTask.executeForResult();
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(IEsptouchResult result) {
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setEnabled(true);
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE).setText(
+                    "Confirm");
+            // it is unnecessary at the moment, add here just to show how to use isCancelled()
+            if (!result.isCancelled()) {
+                if (result.isSuc()) {
+                    mProgressDialog.setMessage("Esptouch success, bssid = "
+                            + result.getBssid() + ",InetAddress = "
+                            + result.getInetAddress().getHostAddress());
+                } else {
+                    mProgressDialog.setMessage("Esptouch fail");
+                }
+            }
+        }
+    }
+
+    private void onEsptoucResultAddedPerform(final IEsptouchResult result) {
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                String text = result.getBssid() + " is connected to the wifi";
+                Toast.makeText(MainActivity.this, text,
+                        Toast.LENGTH_LONG).show();
+            }
+
+        });
+    }
+
+    private IEsptouchListener myListener = new IEsptouchListener() {
+
+        @Override
+        public void onEsptouchResultAdded(final IEsptouchResult result) {
+            onEsptoucResultAddedPerform(result);
+        }
+    };
+
+    private class EsptouchAsyncTask3 extends AsyncTask<String, Void, List<IEsptouchResult>> {
+
+        private ProgressDialog mProgressDialog;
+
+        private IEsptouchTask mEsptouchTask;
+        // without the lock, if the user tap confirm and cancel quickly enough,
+        // the bug will arise. the reason is follows:
+        // 0. task is starting created, but not finished
+        // 1. the task is cancel for the task hasn't been created, it do nothing
+        // 2. task is created
+        // 3. Oops, the task should be cancelled, but it is running
+        private final Object mLock = new Object();
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog
+                    .setMessage("Esptouch is configuring, please wait for a moment...");
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    synchronized (mLock) {
+                        if (__IEsptouchTask.DEBUG) {
+                            Log.i("test", "progress dialog is canceled");
+                        }
+                        if (mEsptouchTask != null) {
+                            mEsptouchTask.interrupt();
+                        }
+                    }
+                }
+            });
+            mProgressDialog.setButton(DialogInterface.BUTTON_POSITIVE,
+                    "Waiting...", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+            mProgressDialog.show();
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setEnabled(false);
+        }
+
+        @Override
+        protected List<IEsptouchResult> doInBackground(String... params) {
+            int taskResultCount = -1;
+            synchronized (mLock) {
+                String apSsid = params[0];
+                String apBssid = params[1];
+                String apPassword = params[2];
+                String isSsidHiddenStr = params[3];
+                String taskResultCountStr = params[4];
+                boolean isSsidHidden = false;
+                if (isSsidHiddenStr.equals("YES")) {
+                    isSsidHidden = true;
+                }
+                taskResultCount = Integer.parseInt(taskResultCountStr);
+                mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword,
+                        isSsidHidden, MainActivity.this);
+                mEsptouchTask.setEsptouchListener(myListener);
+            }
+            List<IEsptouchResult> resultList = mEsptouchTask.executeForResults(taskResultCount);
+            return resultList;
+        }
+
+        @Override
+        protected void onPostExecute(List<IEsptouchResult> result) {
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setEnabled(true);
+            mProgressDialog.getButton(DialogInterface.BUTTON_POSITIVE).setText(
+                    "Confirm");
+            IEsptouchResult firstResult = result.get(0);
+            // check whether the task is cancelled and no results received
+            if (!firstResult.isCancelled()) {
+                int count = 0;
+                // max results to be displayed, if it is more than maxDisplayCount,
+                // just show the count of redundant ones
+                final int maxDisplayCount = 5;
+                // the task received some results including cancelled while
+                // executing before receiving enough results
+                if (firstResult.isSuc()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (IEsptouchResult resultInList : result) {
+                        sb.append("Esptouch success, bssid = "
+                                + resultInList.getBssid()
+                                + ",InetAddress = "
+                                + resultInList.getInetAddress()
+                                .getHostAddress() + "\n");
+                        count++;
+                        if (count >= maxDisplayCount) {
+                            break;
+                        }
+                    }
+                    if (count < result.size()) {
+                        sb.append("\nthere's " + (result.size() - count)
+                                + " more result(s) without showing\n");
+                    }
+                    mProgressDialog.setMessage(sb.toString());
+                } else {
+                    mProgressDialog.setMessage("Esptouch fail");
+                }
+            }
         }
     }
 }
