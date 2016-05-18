@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         //TSW.deleteChannel("116139");
         //TSW.percentChannel("96545");
         TSW.refresh();
-        db = SQLite.getReadableDatabase();
+        
 
     }
 
