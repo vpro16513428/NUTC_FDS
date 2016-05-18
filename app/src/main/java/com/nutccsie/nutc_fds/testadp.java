@@ -20,9 +20,11 @@ public class testadp extends ArrayAdapter<String> {
     private int red_warn=0;
 
 
-    public testadp(Context context, List<String> objects) {
+    public testadp(Context context, List<String> objects,int yellow_warn,int red_warn) {
         super(context, android.R.layout.simple_list_item_1, objects);
         mWeights  = objects;
+        this.yellow_warn=yellow_warn;
+        this.red_warn=red_warn;
     }
 
 

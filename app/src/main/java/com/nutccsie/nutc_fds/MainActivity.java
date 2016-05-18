@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         readSavedData();
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
-        testadp_test = new testadp(this, item);
+        testadp_test = new testadp(this, item,yellow_warn,red_warn);
         listinput.setAdapter(testadp_test);
         Channel_Info=new String[1][5];
         Channel_Info[0][0]="192.168.1.101";
