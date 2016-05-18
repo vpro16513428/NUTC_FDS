@@ -28,52 +28,59 @@ public class HttpURLConnection_WORK {
     }
     //發送HttpURLConnectionRequest(網址,資料內容,編碼方式)
     public String sendHttpURLConnectionRequest(String method) {
+        String temp="";
         try {
             //打開服務器
             HttpURLConnection hucn=(HttpURLConnection) url.openConnection();
             hucn.setReadTimeout(5000);            //設置讀取超時為5秒
             hucn.setConnectTimeout(10000);        //設置連接網路超時為10秒
+
             //設置輸出入流串
-            hucn.setDoOutput(true);                //可寫入資料至伺服器
             hucn.setDoInput(true);                //可從伺服器取得資料
-            //設置請求的方法為POST
-            hucn.setRequestMethod(method);
-            //POST方法不能緩存數據,需手動設置使用緩存的值為false
-            hucn.setUseCaches(false);
-            //連接資料庫
-            //hucn.connect();    //如使用調用getResponseCode()判斷是否為200 就不必使用connect()
-            //寫入參數
-            OutputStream os=hucn.getOutputStream();            //設置輸出流串
-            DataOutputStream dos=new DataOutputStream(os);    //封裝寫給伺服器的資料,需存進這裡
-            if (map != null && !map.isEmpty()) {            //判斷map是否非null或有初始化
-                String str=null;                //用來存傳送參數
-                //entrySet()會得到map內的key-value成對的集合,並回傳
-                for (Map.Entry<String, String> entry : map.entrySet()) {
-                    if(str==null)    //判斷是否為第一次調用
-                        str=entry.getKey()+"="+ URLEncoder.encode(entry.getValue(),encode);
-                    else
-                        str=str+"&"+entry.getKey()+"="+URLEncoder.encode(entry.getValue(),encode);
-                    //Key值不變,Value轉成UTF-8編碼可使用中文
-                    //Map.Entry內提供了getKey()、getValue()、setValue(),雖然增加一行卻省略了很多對Map不必要的get調用
+            if(method=="GET"){
+                //設置請求的方法
+                hucn.setRequestMethod(method);
+            }else {
+                hucn.setDoOutput(true);                //可寫入資料至伺服器
+                //設置請求的方法
+                hucn.setRequestMethod(method);
+                //POST方法不能緩存數據,需手動設置使用緩存的值為false
+                hucn.setUseCaches(false);
+                //寫入參數
+                OutputStream os=hucn.getOutputStream();            //設置輸出流串
+                DataOutputStream dos=new DataOutputStream(os);    //封裝寫給伺服器的資料,需存進這裡
+                if (map != null && !map.isEmpty()) {            //判斷map是否非null或有初始化
+                    String str=null;                //用來存傳送參數
+                    //entrySet()會得到map內的key-value成對的集合,並回傳
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        if(str==null)    //判斷是否為第一次調用
+                            str=entry.getKey()+"="+ URLEncoder.encode(entry.getValue(),encode);
+                        else
+                            str=str+"&"+entry.getKey()+"="+URLEncoder.encode(entry.getValue(),encode);
+                        //Key值不變,Value轉成UTF-8編碼可使用中文
+                        //Map.Entry內提供了getKey()、getValue()、setValue(),雖然增加一行卻省略了很多對Map不必要的get調用
+                    }
+                    dos.writeBytes(str);    //將設置好的請求參數寫進dos
+                    //顯示時必須進行解碼,否則看到的中文會變成亂碼
+                    Log.i("text","HttpURLConnection_POST.dos傳送資料="+java.net.URLDecoder.decode(str,encode));
                 }
-                dos.writeBytes(str);    //將設置好的請求參數寫進dos
-                //顯示時必須進行解碼,否則看到的中文會變成亂碼
-                Log.i("text","HttpURLConnection_POST.dos傳送資料="+java.net.URLDecoder.decode(str,encode));
+                //輸出完關閉輸出流
+                dos.flush();
+                dos.close();
             }
-            //輸出完關閉輸出流
-            dos.flush();
-            dos.close();
+
             //判斷是否請求成功,為200時表示成功,其他均有問題
             if(hucn.getResponseCode() == 200){
                 //取得回傳的inputStream (輸入流串)
                 InputStream inputStream = hucn.getInputStream();
-                return changeInputStream(inputStream);
+                temp= changeInputStream(inputStream);
             }
         } catch (Exception e) {
             e.printStackTrace();
             Log.e("text","HttpURLConnection_POST="+e.toString());
         }
-        return "";
+
+        return temp;
     }
     public String changeInputStream(InputStream inputStream) {    //將輸入串流轉成字串回傳
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

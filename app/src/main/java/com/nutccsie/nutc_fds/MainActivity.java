@@ -173,8 +173,8 @@ public class MainActivity extends AppCompatActivity {
         Channel_Info[0][3]="Y50WL6TXOL5JY42N";
         Channel_Info[0][4]="";
         ThingSpeakWork TSW = new ThingSpeakWork();
-        //TSW.refresh();
-
+        TSW.refresh();
+        Log.d("test","test");
 
     }
 
@@ -581,7 +581,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    return 0;
+                    break;
 
                 case 1://edit
                     map = new HashMap<>();
@@ -591,7 +591,7 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
                     HUCW.sendHttpURLConnectionRequest("PUT");
-                    return 1;
+                    break;
 
                 case 2://reset
                     map = new HashMap<>();
@@ -600,7 +600,7 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
                     HUCW.sendHttpURLConnectionRequest("DELETE");
-                    return 2;
+                    break;
 
                 case 3://delete
                     map = new HashMap<>();
@@ -609,7 +609,7 @@ public class MainActivity extends AppCompatActivity {
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + ".json", map);
                     HUCW.sendHttpURLConnectionRequest("DELETE");
-                    return 3;
+                    break;
 
                 case 4://percent
                     map = null;
@@ -618,23 +618,30 @@ public class MainActivity extends AppCompatActivity {
                     JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
 
                     int num = 0;
-                    float max = 0, last = 0;
+                    float max = 0, last = 0,percent=0;
                     try {
                         result = new JSONObject(JSONstr);
                         num = result.getJSONArray("feeds").length();
-                        for (int i = 0; i < num; i++) {
-                            if (max < result.getJSONArray("feeds").getJSONObject(i).getInt("field1")) {
-                                max = result.getJSONArray("feeds").getJSONObject(i).getInt("field1");
+                        if(num!=0){
+                            for (int i = 0; i < num; i++) {
+                                if (max < result.getJSONArray("feeds").getJSONObject(i).getInt("field1")) {
+                                    max = result.getJSONArray("feeds").getJSONObject(i).getInt("field1");
+                                }
                             }
+                            last = result.getJSONArray("feeds").getJSONObject(num - 1).getInt("field1");
+
+                            percent = last / max * 100;
+                            Channel_percent=String.format("%.1f", percent) ;
+                        }else {
+                            Channel_percent = "0.0";
                         }
-                        last = result.getJSONArray("feeds").getJSONObject(num - 1).getInt("field1");
-                        Channel_percent = String.valueOf(last / max * 100);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    return 4;
+                    break;
 
                 case 5://refresh
+
                     map = null;
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/users/vpro16513428/channels.json", map);
@@ -643,17 +650,21 @@ public class MainActivity extends AppCompatActivity {
 
                     try {
                         result = new JSONObject(JSONstr);
-                        channel_total=result.getJSONArray("channels").length()-1;
-                        Channel_ID = String.valueOf(result.getJSONArray("channels").getJSONObject(0).getInt("id"));
-                        Channel_name = result.getJSONArray("channels").getJSONObject(0).getString("name");
+                        if(result.getJSONArray("channels").length()!=0){
+                            channel_total=result.getJSONArray("channels").length()-1;
+                        }
+                        for(int i = 0;i<=channel_total;i++){
+                            Channel_Info[i][1]=String.valueOf(result.getJSONArray("channels").getJSONObject(i).getInt("id"));
+                            Channel_Info[i][2]=result.getJSONArray("channels").getJSONObject(i).getString("name");
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    return 5;
+                    break;
 
             }
             publishProgress(100);
-            return null;
+            return params[0];
         }
 
         @Override
@@ -688,7 +699,7 @@ public class MainActivity extends AppCompatActivity {
                     temp[channel_total][4]="0";
 
                     Channel_Info=temp;
-                    Log.d("Channel_Info",Channel_Info.toString());
+
                     break;
                 case 1: //edit
 
@@ -703,21 +714,23 @@ public class MainActivity extends AppCompatActivity {
 
                     break;
                 case 5: //refresh
-                    ThingSpeakWork mTSW = new ThingSpeakWork();
-                    mTSW.percentChannel(Channel_ID);
-                    try {
-                        mTSW.get();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                    Channel_Info[channel_total][1]=Channel_ID;
-                    Channel_Info[channel_total][2]=Channel_name;
-                    Channel_Info[channel_total][4]=Channel_percent;
 
-                    item.add(Channel_name + "        " + Channel_percent + "%");
+                    for(int i=0;i<=channel_total;i++){
+
+                        ThingSpeakWork mTSW = new ThingSpeakWork();
+                        mTSW.percentChannel(Channel_Info[i][1]);
+                        try {
+                            mTSW.get();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                        Channel_Info[i][4]=Channel_percent;
+                        item.add(Channel_Info[i][2] + "        " + Channel_Info[i][4] + "%");
+                    }
                     testadp_test.notifyDataSetChanged();
+
                     break;
             }
             progressBar.dismiss();
