@@ -226,10 +226,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (!inputText.getText().toString().equals("")) {
                                     ThingSpeakWork TSW = new ThingSpeakWork();
                                     TSW.newChannel(inputText.getText().toString());
-                                    item.add(inputText.getText().toString() + "        " + Channel_Info[channel_total][4] + "%");
-                                    inputText.setText("");
-                                    listinput.setAdapter(testadp_test);
-                                    count++;
+
                                 }
                             }
                         })
@@ -241,8 +238,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openedit(){
-        final String[] str = new String[count];
-        for(int i=0; i<count; i++){
+        String[] str = new String[channel_total+1];
+        for(int i=0; i<=channel_total; i++){
             str[i] = item.get(i);
         }
         new AlertDialog.Builder(MainActivity.this)
@@ -251,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which){
                         y = which;
+                        Log.d("y", String.valueOf(y));
                     }
                 })
                 .setPositiveButton("取消",
@@ -285,7 +283,8 @@ public class MainActivity extends AppCompatActivity {
                                                             item.remove(y);
                                                             testadp_test.insert(inputText2.getText().toString() + "        " + Channel_Info[y][4] + "%", y);
                                                             ThingSpeakWork TSW = new ThingSpeakWork();
-                                                            TSW.editChannel(Channel_Info[y+1][1],inputText2.getText().toString());
+                                                            TSW.editChannel(Channel_Info[y][1],inputText2.getText().toString());
+
                                                         }
                                                     }
                                                 })
@@ -296,8 +295,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void opendelete(){
-        final String[] str = new String[count];
-        for (int i = 0; i < count; i++) {
+        String[] str = new String[channel_total+1];
+        for (int i = 0; i <= channel_total; i++) {
             str[i] = item.get(i);
         }
         new AlertDialog.Builder(MainActivity.this)
@@ -319,11 +318,28 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+
+                                ThingSpeakWork TSW = new ThingSpeakWork();
+                                TSW.deleteChannel(Channel_Info[y][1]);
+
                                 item.remove(y);
                                 testadp_test.notifyDataSetChanged();
-                                count--;
-                                ThingSpeakWork TSW = new ThingSpeakWork();
-                                TSW.deleteChannel(Channel_ID);
+
+
+                                String[][] temp =new String[channel_total+1][5];
+                                for (int i = 0;i<=channel_total;i++){
+                                    if(i!=y){
+                                        temp[i]=Channel_Info[i].clone();
+                                    }
+                                }
+                                Channel_Info=temp;
+
+                                channel_total-=1;
+                                if(channel_total<0){
+                                    Channel_Info=null;
+                                }
+
+
                             }
                         })
                 .show();
@@ -699,7 +715,7 @@ public class MainActivity extends AppCompatActivity {
                     channel_total+=1;
 
                     String[][] temp =new String[channel_total+1][5];
-                    for (int i = 0;i<channel_total;i++){
+                    for (int i = 0;i<channel_total;i++){ //COPY到最後一列之前
                         for(int j = 0;j<5;j++){
                             temp[i][j]=Channel_Info[i][j];
                         }
@@ -713,11 +729,12 @@ public class MainActivity extends AppCompatActivity {
                     //APIKEY
                     temp[channel_total][3]=Channel_APIKEY;
                     //Percent
-                    temp[channel_total][4]="0";
+                    temp[channel_total][4]="0.0";
 
                     Channel_Info=temp;
 
                     item.add(Channel_Info[channel_total][2] + "        " + Channel_Info[channel_total][4] + "%");
+                    testadp_test.notifyDataSetChanged();
 
                     break;
                 case 1: //edit
