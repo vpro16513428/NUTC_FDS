@@ -32,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="send"
-        android:text="send from app" />
+        android:text="Channel_APIKEY:Y50WL6TXOL5JY42N" />
 
     <Button
         android:id="@+id/send_btn"

@@ -1,6 +1,7 @@
 package com.nutccsie.nutc_fds;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.support.annotation.StringDef;
@@ -26,13 +27,19 @@ import android.widget.Toast;
 
 import com.nutccsie.nutc_fds.task.__IEsptouchTask;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -42,14 +49,14 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
-    int channel_total=0;
-    int[][] channel_info;// [0] ID ,  [1] APIKEY , [2] MAX , [3] LAST , [4] Percent
-    String User_APIKEY="RO28U1DJSWQB8Q3L";
-    String Channel_name="";
-    String Channel_ID="";
-    String Channel_APIKEY="";
-    String Channel_percent="";
-    String Sensor_IP="";
+    int channel_total = 0;
+    String[][] Channel_Info;// [0] IP ,  [1] ID , [2] name , [3] APIKEY , [4] Percent
+    String User_APIKEY = "RO28U1DJSWQB8Q3L";
+    String Channel_name = "";
+    String Channel_ID = "";
+    String Channel_APIKEY = "";
+    String Channel_percent = "";
+    String Sensor_IP = "";
     Socket socket = null;
     TextView textResponse;
 
@@ -58,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
+    int count = 0, y = 0, red_warn = 20, yellow_warn = 50;
     SQLiteDatabase db;
     //資料庫名
     public String db_name = "SQLite";
@@ -69,16 +76,96 @@ public class MainActivity extends AppCompatActivity {
     //輔助類名
     MyDBHelper SQLite = new MyDBHelper(MainActivity.this, db_name);
 
+    public void writeData() {
+        try {
+            FileOutputStream fos = openFileOutput("settings.dat", Context.MODE_PRIVATE);
+            OutputStreamWriter osw = new OutputStreamWriter(fos);
+            JSONObject data = new JSONObject();
+            //User_APIKEY
+            data.put("User_APIKEY", User_APIKEY);
+            //Channel_Info
+            JSONArray temp = new JSONArray();
+            for (int i = 0; i < channel_total; i++) {
+                JSONObject temp2 = new JSONObject();
+                for (int j = 0; j < 5; j++) {
+                    switch (j) {
+                        case 0: //IP
+                            temp2.put("IP", Channel_Info[i][0]);
+                            break;
+                        case 1: //ID
+                            temp2.put("ID", Channel_Info[i][1]);
+                            break;
+                        case 2: //name
+                            temp2.put("name", Channel_Info[i][2]);
+                            break;
+                        case 3: //APIKEY
+                            temp2.put("APIKEY", Channel_Info[i][3]);
+                            break;
+                        case 4: //Percent
+                            temp2.put("Percent", Channel_Info[i][4]);
+                            break;
+                    }
+                }
+                temp.put(i, temp2);
+            }
+
+            data.put("Channel_Info", temp);
+
+            osw.write(data.toString());
+            osw.flush();
+            osw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void readSavedData() {
+        StringBuffer datax = new StringBuffer("");
+        try {
+            FileInputStream fIn = openFileInput("settings.dat");
+            InputStreamReader isr = new InputStreamReader(fIn);
+            BufferedReader buffreader = new BufferedReader(isr);
+
+            String readString = buffreader.readLine();
+            while (readString != null) {
+                datax.append(readString);
+                readString = buffreader.readLine();
+            }
+
+            isr.close();
+            JSONObject data = null;
+            data = new JSONObject(datax.toString());
+            User_APIKEY = data.getString("User_APIKEY");
+            channel_total = data.getJSONArray("Channel_Info").length();
+            for (int i = 0; i < channel_total; i++) {
+                //IP
+                Channel_Info[i][0] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("IP");
+                //ID
+                Channel_Info[i][1] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("ID");
+                //name
+                Channel_Info[i][2] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("name");
+                //APIKEY
+                Channel_Info[i][3] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("APIKEY");
+                //Percent
+                Channel_Info[i][4] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("Percent");
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
 
-        listinput = (ListView)findViewById(R.id.listView);
+        listinput = (ListView) findViewById(R.id.listView);
         item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
-        testadp_test = new testadp(this,item);
+        testadp_test = new testadp(this, item);
         listinput.setAdapter(testadp_test);
         //AlertDialog
         ThingSpeakWork TSW = new ThingSpeakWork();
@@ -98,8 +185,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }// ActionBar
 
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch (item.getItemId()){
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
             case R.id.action_add:
                 openadd();
                 return true;
@@ -114,32 +201,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }//讓ActionBar按鈕有動作
 
-    private  void refresharraylist(){
-        for (int i=0 ; i<count ; i++){
-            if (channel_info[i][3]<red_warn){
-            }
-            if (channel_info[i][3]<yellow_warn){
-            }
-        }
-    }
-
-    private void openadd(){
+    private void openadd() {
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.add_activity, null);
-        final EditText inputText = (EditText)v.findViewById(R.id.edit);
-        final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
+        final EditText inputText = (EditText) v.findViewById(R.id.edit);
+        final EditText inputText2 = (EditText) v.findViewById(R.id.edit2);
 
-            new AlertDialog.Builder(MainActivity.this)
+        new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
                 .setPositiveButton("取消",
-                        new  DialogInterface.OnClickListener(){
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog,int which){
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
                         })
-                    .setNegativeButton("確定",
+                .setNegativeButton("確定",
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -147,16 +225,16 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         })
-                    .create().show();
+                .create().show();
     }//用AlertDialog的方式以EditText新增到listview
 
     public EditText getInputText() {
         return inputText;
     }
 
-    private void opendelete(){
+    private void opendelete() {
         final String[] str = new String[count];
-        for(int i=0; i<count; i++) {
+        for (int i = 0; i < count; i++) {
             str[i] = item.get(i);
         }
         new AlertDialog.Builder(MainActivity.this)
@@ -168,9 +246,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .setPositiveButton("取消",
-                        new  DialogInterface.OnClickListener(){
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog,int which){
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
                         })
@@ -187,40 +265,41 @@ public class MainActivity extends AppCompatActivity {
 
     }//用AlertDialog的方式以EditText新增到listview
 
-    private void opensetting(){
+    private void opensetting() {
         final LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.setting_activity, null);
         final TextView text = (TextView) v.findViewById(R.id.textView);
-        final SeekBar seekbar = (SeekBar)v.findViewById(R.id.seekBar);
+        final SeekBar seekbar = (SeekBar) v.findViewById(R.id.seekBar);
         final TextView text3 = (TextView) v.findViewById(R.id.textView3);
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
-        final SeekBar seekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
+        final SeekBar seekbar2 = (SeekBar) v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
         final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
         final Button set_btn = (Button) v.findViewById(R.id.Set_sensor_button);
         seekbar.setProgress(yellow_warn);
         seekbar2.setProgress(red_warn);
-        text3.setText(yellow_warn+"%");
-        text4.setText(red_warn+"%");
+        text3.setText(yellow_warn + "%");
+        text4.setText(red_warn + "%");
         final AlertDialog.Builder setting = new AlertDialog.Builder(this);
         setting.setTitle("設定")
                 .setView(v)
                 .setPositiveButton("離開",
-                        new  DialogInterface.OnClickListener(){
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog,int which){
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
                         })
                 .setNegativeButton("確定",
-                        new  DialogInterface.OnClickListener(){
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog,int which){
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress = 0;
+
             public void onProgressChanged(SeekBar seekBar, int progressV, boolean fromUser) {
                 progress = progressV;
                 text3.setText((progress) + "%");
@@ -228,22 +307,27 @@ public class MainActivity extends AppCompatActivity {
                 testadp_test.setYellowWarnValue(yellow_warn);
                 testadp_test.notifyDataSetChanged();
             }
+
             public void onStartTrackingTouch(SeekBar arg0) {
             }
+
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
         seekbar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress = 0;
+
             public void onProgressChanged(SeekBar seekBar2, int progressV, boolean fromUser) {
                 progress = progressV;
-                text4.setText((progress)+"%");
+                text4.setText((progress) + "%");
                 red_warn = progress;
                 testadp_test.setRedWarnValue(red_warn);
                 testadp_test.notifyDataSetChanged();
             }
+
             public void onStartTrackingTouch(SeekBar arg0) {
             }
+
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
@@ -283,28 +367,26 @@ public class MainActivity extends AppCompatActivity {
                             Boolean isSsidHidden = false;
                             String isSsidHiddenStr = "NO";
                             String taskResultCountStr = "1";
-                            if (isSsidHidden)
-                            {
+                            if (isSsidHidden) {
                                 isSsidHiddenStr = "YES";
                             }
                             if (__IEsptouchTask.DEBUG) {
                                 Log.d(TAG, "mBtnConfirm is clicked, mEdtApSsid = " + apSsid + ", " + " mEdtApPassword = " + apPassword);
                             }
-                            new EsptouchAsyncTask3().execute(apSsid, apBssid, apPassword, isSsidHiddenStr, taskResultCountStr);
+                            EsptouchAsyncTask3 temp = new EsptouchAsyncTask3();
+                            temp.execute(apSsid, apBssid, apPassword, isSsidHiddenStr, taskResultCountStr);
                         }
                     }
                 });
-
-
 
 
                 final AlertDialog.Builder scn = new AlertDialog.Builder(MainActivity.this);
                 scn.setTitle("ScanSensor")
                         .setView(scn_v)
                         .setPositiveButton("離開",
-                                new  DialogInterface.OnClickListener(){
+                                new DialogInterface.OnClickListener() {
                                     @Override
-                                    public void onClick(DialogInterface dialog,int which){
+                                    public void onClick(DialogInterface dialog, int which) {
                                         dialog.cancel();
                                     }
                                 });
@@ -321,7 +403,7 @@ public class MainActivity extends AppCompatActivity {
 
                 final TextView txtSend;
                 final EditText editTextAddress, editTextPort;
-                final Button buttonConnect,buttonSend;
+                final Button buttonConnect, buttonSend;
 
                 editTextAddress = (EditText) set_v.findViewById(R.id.address);
                 editTextAddress.setText(Sensor_IP);
@@ -335,6 +417,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         if (v == buttonConnect) {
+                            Log.d("IP:PORT", editTextAddress.getText().toString() + ":" + editTextPort.getText().toString());
                             MyClient_connect_Task myClientTask = new MyClient_connect_Task(editTextAddress.getText().toString(), Integer.parseInt(editTextPort.getText().toString()));
                             myClientTask.execute();
                         }
@@ -344,7 +427,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         if (v == buttonSend) {
-                            MyClient_send_Task myClient_send_task =new MyClient_send_Task();
+
+                            MyClient_send_Task myClient_send_task = new MyClient_send_Task();
                             myClient_send_task.execute(txtSend.getText().toString());
                         }
                     }
@@ -354,9 +438,9 @@ public class MainActivity extends AppCompatActivity {
                 set.setTitle("Set Sensor")
                         .setView(set_v)
                         .setPositiveButton("離開",
-                                new  DialogInterface.OnClickListener(){
+                                new DialogInterface.OnClickListener() {
                                     @Override
-                                    public void onClick(DialogInterface dialog,int which){
+                                    public void onClick(DialogInterface dialog, int which) {
                                         dialog.cancel();
                                     }
                                 });
@@ -370,38 +454,38 @@ public class MainActivity extends AppCompatActivity {
 
     public class ThingSpeakWork extends AsyncTask<Integer, Integer, Integer> {
         private ProgressDialog progressBar;
-        HttpURLConnection_WORK HUCW=null;
-        String JSONstr=null;
-        JSONObject result=null;
-        HashMap<String,String> map=null;
+        HttpURLConnection_WORK HUCW = null;
+        String JSONstr = null;
+        JSONObject result = null;
+        HashMap<String, String> map = null;
 
-        void newChannel(String name){
-            Channel_name=name;
+        void newChannel(String name) {
+            Channel_name = name;
             this.execute(0);
         }
 
-        void editChannel(String ID,String name){
-            Channel_ID=ID;
-            Channel_name=name;
+        void editChannel(String ID, String name) {
+            Channel_ID = ID;
+            Channel_name = name;
             this.execute(1);
         }
 
-        void resetChannel(String ID){
-            Channel_ID=ID;
+        void resetChannel(String ID) {
+            Channel_ID = ID;
             this.execute(2);
         }
 
-        void deleteChannel(String ID){
-            Channel_ID=ID;
+        void deleteChannel(String ID) {
+            Channel_ID = ID;
             this.execute(3);
         }
 
-        void percentChannel(String ID){
-            Channel_ID=ID;
+        void percentChannel(String ID) {
+            Channel_ID = ID;
             this.execute(4);
         }
 
-        void refresh(){
+        void refresh() {
             this.execute(5);
         }
 
@@ -425,7 +509,7 @@ public class MainActivity extends AppCompatActivity {
                     //new
                     map.put("name", Channel_name);
                     map.put("api_key", User_APIKEY);
-                    map.put("public_flag","true");
+                    map.put("public_flag", "true");
 
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels.json", map);
                     JSONstr = HUCW.sendHttpURLConnectionRequest("POST");
@@ -474,18 +558,18 @@ public class MainActivity extends AppCompatActivity {
                     HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels/" + Channel_ID + "/feeds.json", map);
                     JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
 
-                    int num=0;
-                    float max=0,last=0;
+                    int num = 0;
+                    float max = 0, last = 0;
                     try {
                         result = new JSONObject(JSONstr);
-                        num=result.getJSONArray("feeds").length();
-                        for (int i=0;i<num;i++){
-                            if (max<result.getJSONArray("feeds").getJSONObject(i).getInt("field1")){
-                                max=result.getJSONArray("feeds").getJSONObject(i).getInt("field1");
+                        num = result.getJSONArray("feeds").length();
+                        for (int i = 0; i < num; i++) {
+                            if (max < result.getJSONArray("feeds").getJSONObject(i).getInt("field1")) {
+                                max = result.getJSONArray("feeds").getJSONObject(i).getInt("field1");
                             }
                         }
-                        last=result.getJSONArray("feeds").getJSONObject(num-1).getInt("field1");
-                        Channel_percent= String.valueOf(last/max*100);
+                        last = result.getJSONArray("feeds").getJSONObject(num - 1).getInt("field1");
+                        Channel_percent = String.valueOf(last / max * 100);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -500,8 +584,8 @@ public class MainActivity extends AppCompatActivity {
 
                     try {
                         result = new JSONObject(JSONstr);
-                        Channel_ID= String.valueOf(result.getJSONArray("channels").getJSONObject(0).getInt("id"));
-                        Channel_name=result.getJSONArray("channels").getJSONObject(0).getString("name");
+                        Channel_ID = String.valueOf(result.getJSONArray("channels").getJSONObject(0).getInt("id"));
+                        Channel_name = result.getJSONArray("channels").getJSONObject(0).getString("name");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -521,7 +605,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Integer method) {
             super.onPostExecute(method);
-            switch (method){
+            switch (method) {
                 case 0: //new
 
                     break;
@@ -538,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
 
                     break;
                 case 5: //refresh
-                    ThingSpeakWork mTSW =new ThingSpeakWork();
+                    ThingSpeakWork mTSW = new ThingSpeakWork();
                     mTSW.percentChannel(Channel_ID);
                     try {
                         mTSW.get();
@@ -668,7 +752,7 @@ public class MainActivity extends AppCompatActivity {
                                 + ",InetAddress = "
                                 + resultInList.getInetAddress()
                                 .getHostAddress() + "\n");
-                        Sensor_IP=Sensor_IP+resultInList.getInetAddress();
+                        Sensor_IP = resultInList.getInetAddress().toString();
                         Toast.makeText(MainActivity.this, Sensor_IP, Toast.LENGTH_LONG).show();
                         sb.append("Esptouch success, bssid = " + resultInList.getBssid() + ",InetAddress = " + resultInList.getInetAddress().getHostAddress() + "\n");
                         count++;
@@ -693,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
         int dstPort;
         String response = "";
 
-        MyClient_connect_Task(String addr, int port){
+        MyClient_connect_Task(String addr, int port) {
             dstAddress = addr;
             dstPort = port;
         }
@@ -701,7 +785,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... arg0) {
             try {
-                Log.d("connectTask","connectTask");
+                Log.d("connectTask", "connectTask");
+                socket = null;
                 socket = new Socket(dstAddress, dstPort);
 
             } catch (UnknownHostException e) {
@@ -731,7 +816,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(String... arg0) {
             try {
-                Log.d("sendTask","sendTask");
+                Log.d("sendTask", "sendTask");
                 byte[] data = arg0[0].getBytes("UTF-8");
                 OutputStream os = socket.getOutputStream();
                 os.write(data);
@@ -746,7 +831,7 @@ public class MainActivity extends AppCompatActivity {
      * notice:
      * inputStream.read() will block if no data return
      */
-                while ((bytesRead = inputStream.read(buffer)) != -1){
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
                     byteArrayOutputStream.write(buffer, 0, bytesRead);
                     response += byteArrayOutputStream.toString("UTF-8");
                 }
@@ -759,8 +844,8 @@ public class MainActivity extends AppCompatActivity {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
-            }finally{
-                if(socket != null){
+            } finally {
+                if (socket != null) {
                     try {
                         socket.close();
                     } catch (IOException e) {
