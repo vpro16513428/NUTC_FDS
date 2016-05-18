@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
             JSONObject data = new JSONObject();
             //User_APIKEY
             data.put("User_APIKEY", User_APIKEY);
+            /*
             //Channel_Info
             JSONArray temp = new JSONArray();
             for (int i = 0; i < channel_total; i++) {
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             data.put("Channel_Info", temp);
-
+*/
             osw.write(data.toString());
             osw.flush();
             osw.close();
@@ -128,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
             JSONObject data = null;
             data = new JSONObject(datax.toString());
             User_APIKEY = data.getString("User_APIKEY");
+            /*
             if(data.getJSONArray("Channel_Info").length()!=0){
                 channel_total = data.getJSONArray("Channel_Info").length()-1;
             }
@@ -143,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 Channel_Info[i][3] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("APIKEY");
                 //Percent
                 Channel_Info[i][4] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("Percent");
-            }
+            }*/
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (JSONException e) {
