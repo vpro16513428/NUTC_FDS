@@ -148,9 +148,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        writeData();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        readSavedData();
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
