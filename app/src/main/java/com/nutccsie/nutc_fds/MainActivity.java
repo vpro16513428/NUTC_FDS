@@ -655,6 +655,15 @@ public class MainActivity extends AppCompatActivity {
                         if(result.getJSONArray("channels").length()!=0){
                             channel_total=result.getJSONArray("channels").length()-1;
                         }
+
+                        String[][] temp =new String[channel_total+1][5];
+                        for (int i = 0;i<channel_total;i++){
+                            for(int j = 0;j<5;j++){
+                                temp[i][j]=Channel_Info[i][j];
+                            }
+                        }
+                        Channel_Info=temp;
+
                         for(int i = 0;i<=channel_total;i++){
                             Channel_Info[i][1]=String.valueOf(result.getJSONArray("channels").getJSONObject(i).getInt("id"));
                             Channel_Info[i][2]=result.getJSONArray("channels").getJSONObject(i).getString("name");
@@ -701,6 +710,8 @@ public class MainActivity extends AppCompatActivity {
                     temp[channel_total][4]="0";
 
                     Channel_Info=temp;
+
+                    item.add(Channel_Info[channel_total][2] + "        " + Channel_Info[channel_total][4] + "%");
 
                     break;
                 case 1: //edit
