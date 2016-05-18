@@ -1,8 +1,12 @@
 package com.nutccsie.nutc_fds;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.os.AsyncTask;
+import android.preference.DialogPreference;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,34 +40,25 @@ public class MainActivity extends AppCompatActivity {
 
     int channel_total=0;
     int[][] channel_info;// [0] ID ,  [1] APIKEY , [2] MAX , [3] LAST , [4] Percent
-    String User_APIKEY="RO28U1DJSWQB8Q3L";
+    String User_APIKEY="";
     String Channel_name="";
     String Channel_ID="";
     String Channel_APIKEY="";
     String Channel_percent="";
 
+    private Cursor myCursor;
     private EditText inputText;
+    private EditText inputTEXT2;
     private ListView listinput;
     private ArrayAdapter<String> adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
     int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
-    SQLiteDatabase db;
-    //資料庫名
-    public String db_name = "SQLite";
-
-    //表名
-    public String table_name = "ListChannel";
-
-    //輔助類名
-    MyDBHelper SQLite = new MyDBHelper(MainActivity.this, db_name);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
@@ -76,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
         //TSW.resetChannel("116139");
         //TSW.deleteChannel("116139");
         //TSW.percentChannel("96545");
-        db = SQLite.getReadableDatabase();
-
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -91,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_add:
                 openadd();
                 return true;
+            case R.id.action_edit:
+                openedit();
+                return true;
             case R.id.action_delete:
                 opendelete();
                 return true;
@@ -102,21 +98,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }//讓ActionBar按鈕有動作
 
-    private  void refresharraylist(){
-        for (int i=0 ; i<count ; i++){
-            if (channel_info[i][3]<red_warn){
-            }
-            if (channel_info[i][3]<yellow_warn){
-            }
-        }
-    }
-
     private void openadd(){
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.add_activity, null);
         final EditText inputText = (EditText)v.findViewById(R.id.edit);
-        final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
-
             new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
@@ -131,21 +116,13 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (!inputText.getText().toString().equals("") && !inputText2.getText().toString().equals("")){
-                                    char ch[] = inputText2.getText().toString().toCharArray();
-                                    for (int i=0 ; i < inputText2.getText().length(); i++){
-                                        if (!Character.isDigit(ch[i])){
-                                            break;
-                                        }else if ((Integer.parseInt(inputText2.getText().toString())>4)){
-                                            item.add(inputText.getText().toString() + "        " + channel_info[0][3] + "%");
-                                        }else {
-                                            item.add(inputText.getText().toString() + "        " + channel_info[Integer.parseInt(inputText2.getText().toString())][3] + "%");
-                                        }
-                                        inputText.setText("");
-                                        listinput.setAdapter(testadp_test);
-                                        ++count;
-                                    }
-
+                                if (!inputText.getText().toString().equals("")){
+                                    item.add(inputText.getText().toString());
+                                    inputText.setText("");
+                                    listinput.setAdapter(testadp_test);
+                                    count++;
+                                    //ThingSpeakWork TSW = new ThingSpeakWork();
+                                    //TSW.newChannel(inputText.getText().toString());
                                 }
                             }
                         })
@@ -154,6 +131,61 @@ public class MainActivity extends AppCompatActivity {
 
     public EditText getInputText() {
         return inputText;
+    }
+
+    private void openedit(){
+        final String[] str = new String[count];
+        for(int i=0; i<count; i++){
+            str[i] = item.get(i);
+        }
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("修改")
+                .setSingleChoiceItems(str, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which){
+                        y = which;
+                    }
+                })
+                .setPositiveButton("取消",
+                        new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which){
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which){
+                                LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+                                final View v = inflater.inflate(R.layout.edit_activity, null);
+                                final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
+                                new AlertDialog.Builder(MainActivity.this)
+                                        .setTitle("修改")
+                                        .setView(v)
+                                        .setPositiveButton("取消",
+                                                new  DialogInterface.OnClickListener(){
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog,int which){
+                                                        dialog.cancel();
+                                                    }
+                                                })
+                                        .setNegativeButton("確定",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        if (!inputText2.getText().toString().equals("")){
+                                                            item.remove(y);
+                                                            testadp_test.insert(inputText2.getText().toString(), y);
+                                                            ThingSpeakWork TSW = new ThingSpeakWork();
+                                                            TSW.editChannel(Channel_ID,inputText2.getText().toString());
+                                                        }
+                                                    }
+                                                })
+                                        .show();
+                            }
+                        })
+                .show();
     }
 
     private void opendelete(){
@@ -183,11 +215,12 @@ public class MainActivity extends AppCompatActivity {
                                 item.remove(y);
                                 testadp_test.notifyDataSetChanged();
                                 count--;
+                                ThingSpeakWork TSW = new ThingSpeakWork();
+                                TSW.deleteChannel(Channel_ID);
                             }
                         })
                 .show();
-
-    }//用AlertDialog的方式以EditText新增到listview
+    }//用AlertDialog的方式指定刪除listview
 
     private void opensetting(){
         final LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -198,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
         final SeekBar seekbar2 = (SeekBar)v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
+        final EditText edittext = (EditText)v.findViewById(R.id.edit);
         final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
         seekbar.setProgress(yellow_warn);
         seekbar2.setProgress(red_warn);
@@ -217,7 +251,8 @@ public class MainActivity extends AppCompatActivity {
                         new  DialogInterface.OnClickListener(){
                             @Override
                             public void onClick(DialogInterface dialog,int which){
-                                dialog.cancel();
+                                User_APIKEY = edittext.getText().toString();
+                                Log.d("text",User_APIKEY);
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
