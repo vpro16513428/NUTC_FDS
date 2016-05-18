@@ -124,10 +124,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             isr.close();
+            Log.d("datax",datax.toString());
             JSONObject data = null;
             data = new JSONObject(datax.toString());
             User_APIKEY = data.getString("User_APIKEY");
-            channel_total = data.getJSONArray("Channel_Info").length();
+            channel_total = data.getJSONArray("Channel_Info").length()-1;
+            Channel_Info=new String[channel_total+1][5];
             for (int i = 0; i < channel_total; i++) {
                 //IP
                 Channel_Info[i][0] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("IP");
@@ -160,16 +162,15 @@ public class MainActivity extends AppCompatActivity {
         readSavedData();
         listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
-        //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
         testadp_test = new testadp(this, item);
         listinput.setAdapter(testadp_test);
-        //AlertDialog
+        Channel_Info=new String[1][5];
+        Channel_Info[0][0]="192.168.1.101";
+        Channel_Info[0][1]="";
+        Channel_Info[0][2]="";
+        Channel_Info[0][3]="Y50WL6TXOL5JY42N";
+        Channel_Info[0][4]="";
         ThingSpeakWork TSW = new ThingSpeakWork();
-        //TSW.newChannel("My New Channel");
-        //TSW.editChannel("116139","Updated Channel");
-        //TSW.resetChannel("116139");
-        //TSW.deleteChannel("116139");
-        //TSW.percentChannel("96545");
         TSW.refresh();
 
 
@@ -218,8 +219,8 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
-
+                                ThingSpeakWork TSW = new ThingSpeakWork();
+                                TSW.newChannel(inputText.getText().toString());
                             }
                         })
                 .create().show();
@@ -550,7 +551,7 @@ public class MainActivity extends AppCompatActivity {
             progressBar = new ProgressDialog(MainActivity.this);
             progressBar.setMessage("Loading...");
             progressBar.setCancelable(false);
-            progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressBar.show();
             //初始化進度條並設定樣式及顯示的資訊。
         }
@@ -570,6 +571,7 @@ public class MainActivity extends AppCompatActivity {
                     JSONstr = HUCW.sendHttpURLConnectionRequest("POST");
 
                     try {
+                        Log.d("JSONstr",JSONstr);
                         result = new JSONObject(JSONstr);
                         Channel_ID = String.valueOf(result.getInt("id"));
                         Channel_APIKEY = result.getJSONArray("api_keys").getJSONObject(0).getString("api_key");
@@ -639,6 +641,7 @@ public class MainActivity extends AppCompatActivity {
 
                     try {
                         result = new JSONObject(JSONstr);
+                        channel_total=result.getJSONArray("channels").length()-1;
                         Channel_ID = String.valueOf(result.getJSONArray("channels").getJSONObject(0).getInt("id"));
                         Channel_name = result.getJSONArray("channels").getJSONObject(0).getString("name");
                     } catch (JSONException e) {
@@ -663,6 +666,27 @@ public class MainActivity extends AppCompatActivity {
             switch (method) {
                 case 0: //new
 
+                    channel_total+=1;
+
+                    String[][] temp =new String[channel_total+1][5];
+                    for (int i = 0;i<channel_total;i++){
+                        for(int j = 0;j<5;j++){
+                            temp[i][j]=Channel_Info[i][j];
+                        }
+                    }
+                    //IP
+                    temp[channel_total][0]="";
+                    //ID
+                    temp[channel_total][1]=Channel_ID;
+                    //name
+                    temp[channel_total][2]=Channel_name;
+                    //APIKEY
+                    temp[channel_total][3]=Channel_APIKEY;
+                    //Percent
+                    temp[channel_total][4]="";
+
+                    Channel_Info=temp;
+
                     break;
                 case 1: //edit
 
@@ -686,6 +710,10 @@ public class MainActivity extends AppCompatActivity {
                     } catch (ExecutionException e) {
                         e.printStackTrace();
                     }
+                    Channel_Info[channel_total][1]=Channel_ID;
+                    Channel_Info[channel_total][2]=Channel_name;
+                    Channel_Info[channel_total][4]=Channel_percent;
+
                     item.add(Channel_name + "        " + Channel_percent + "%");
                     testadp_test.notifyDataSetChanged();
                     break;
