@@ -37,8 +37,7 @@ public class HttpURLConnection_WORK {
             hucn.setDoOutput(true);                //可寫入資料至伺服器
             hucn.setDoInput(true);                //可從伺服器取得資料
             //設置請求的方法為POST
-            Log.d("GET","GET");
-            hucn.setRequestMethod("GET");
+            hucn.setRequestMethod(method);
             //POST方法不能緩存數據,需手動設置使用緩存的值為false
             hucn.setUseCaches(false);
             //連接資料庫

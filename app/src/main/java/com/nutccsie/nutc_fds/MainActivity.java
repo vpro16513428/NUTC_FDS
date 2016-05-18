@@ -128,7 +128,9 @@ public class MainActivity extends AppCompatActivity {
             JSONObject data = null;
             data = new JSONObject(datax.toString());
             User_APIKEY = data.getString("User_APIKEY");
-            channel_total = data.getJSONArray("Channel_Info").length()-1;
+            if(data.getJSONArray("Channel_Info").length()!=0){
+                channel_total = data.getJSONArray("Channel_Info").length()-1;
+            }
             Channel_Info=new String[channel_total+1][5];
             for (int i = 0; i < channel_total; i++) {
                 //IP
@@ -171,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         Channel_Info[0][3]="Y50WL6TXOL5JY42N";
         Channel_Info[0][4]="";
         ThingSpeakWork TSW = new ThingSpeakWork();
-        TSW.refresh();
+        //TSW.refresh();
 
 
     }
@@ -683,10 +685,10 @@ public class MainActivity extends AppCompatActivity {
                     //APIKEY
                     temp[channel_total][3]=Channel_APIKEY;
                     //Percent
-                    temp[channel_total][4]="";
+                    temp[channel_total][4]="0";
 
                     Channel_Info=temp;
-
+                    Log.d("Channel_Info",Channel_Info.toString());
                     break;
                 case 1: //edit
 
