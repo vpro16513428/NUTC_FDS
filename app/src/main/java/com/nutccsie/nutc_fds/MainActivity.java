@@ -74,10 +74,14 @@ public class MainActivity extends AppCompatActivity {
             JSONObject data = new JSONObject();
             //User_APIKEY
             data.put("User_APIKEY", User_APIKEY);
-            /*
+            data.put("yellow_warn", yellow_warn);
+            data.put("red_warn", red_warn);
+            data.put("channel_total", channel_total);
+
             //Channel_Info
+            /*
             JSONArray temp = new JSONArray();
-            for (int i = 0; i < channel_total; i++) {
+            for (int i = 0; i <=channel_total; i++) {
                 JSONObject temp2 = new JSONObject();
                 for (int j = 0; j < 5; j++) {
                     switch (j) {
@@ -106,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
             osw.write(data.toString());
             osw.flush();
             osw.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,26 +131,32 @@ public class MainActivity extends AppCompatActivity {
 
             isr.close();
             Log.d("datax",datax.toString());
-            JSONObject data = null;
-            data = new JSONObject(datax.toString());
-            User_APIKEY = data.getString("User_APIKEY");
-            /*
-            if(data.getJSONArray("Channel_Info").length()!=0){
-                channel_total = data.getJSONArray("Channel_Info").length()-1;
+            if(datax.toString()!=""){
+                JSONObject data = null;
+                data = new JSONObject(datax.toString());
+                User_APIKEY = data.getString("User_APIKEY");
+                yellow_warn = Integer.parseInt(data.getString("yellow_warn"));
+                red_warn = Integer.parseInt(data.getString("red_warn"));
+                channel_total = Integer.parseInt(data.getString("channel_total"));
+/*
+                Channel_Info=new String[channel_total+1][5];
+                Log.d("read_channel_total", String.valueOf(channel_total));
+                Log.d("read_Channel_Info", String.valueOf(Channel_Info.length));
+                for (int i = 0; i <=channel_total; i++) {
+                    //IP
+                    Channel_Info[i][0] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("IP");
+                    //ID
+                    Channel_Info[i][1] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("ID");
+                    //name
+                    Channel_Info[i][2] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("name");
+                    //APIKEY
+                    Channel_Info[i][3] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("APIKEY");
+                    //Percent
+                    Channel_Info[i][4] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("Percent");
+                }*/
             }
-            Channel_Info=new String[channel_total+1][5];
-            for (int i = 0; i < channel_total; i++) {
-                //IP
-                Channel_Info[i][0] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("IP");
-                //ID
-                Channel_Info[i][1] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("ID");
-                //name
-                Channel_Info[i][2] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("name");
-                //APIKEY
-                Channel_Info[i][3] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("APIKEY");
-                //Percent
-                Channel_Info[i][4] = data.getJSONArray("Channel_Info").getJSONObject(i).getString("Percent");
-            }*/
+
+
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (JSONException e) {
@@ -174,10 +185,10 @@ public class MainActivity extends AppCompatActivity {
         Channel_Info[0][2]="";
         Channel_Info[0][3]="Y50WL6TXOL5JY42N";
         Channel_Info[0][4]="";
-        ThingSpeakWork TSW = new ThingSpeakWork();
-        TSW.refresh();
-        Log.d("test","test");
-
+        if(!User_APIKEY.equals("")){
+            ThingSpeakWork TSW = new ThingSpeakWork();
+            TSW.refresh();
+        }
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -280,10 +291,12 @@ public class MainActivity extends AppCompatActivity {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
                                                         if (!inputText2.getText().toString().equals("")){
-                                                            item.remove(y);
-                                                            testadp_test.insert(inputText2.getText().toString() + "        " + Channel_Info[y][4] + "%", y);
                                                             ThingSpeakWork TSW = new ThingSpeakWork();
                                                             TSW.editChannel(Channel_Info[y][1],inputText2.getText().toString());
+
+                                                            item.remove(y);
+                                                            testadp_test.insert(inputText2.getText().toString() + "        " + Channel_Info[y][4] + "%", y);
+
 
                                                         }
                                                     }
@@ -668,28 +681,42 @@ public class MainActivity extends AppCompatActivity {
 
                     map = null;
 
-                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/users/vpro16513428/channels.json", map);
+                    HUCW = new HttpURLConnection_WORK("https://api.thingspeak.com/channels.json?api_key="+User_APIKEY, map);
                     JSONstr = HUCW.sendHttpURLConnectionRequest("GET");
 
 
                     try {
-                        result = new JSONObject(JSONstr);
-                        if(result.getJSONArray("channels").length()!=0){
-                            channel_total=result.getJSONArray("channels").length()-1;
+                        JSONArray temp = new JSONArray(JSONstr);
+                        if(temp.length()!=0){
+                            channel_total=temp.length()-1;
                         }
 
-                        String[][] temp =new String[channel_total+1][5];
-                        for (int i = 0;i<channel_total;i++){
+                        String[][] temp2 =new String[channel_total+1][5];
+
+                        for (int i = 0;i<=channel_total;i++){
                             for(int j = 0;j<5;j++){
-                                temp[i][j]=Channel_Info[i][j];
+                                switch (j){
+                                    case 0:
+                                        temp2[i][0]="";
+                                        break;
+                                    case 1:
+                                        temp2[i][1]= String.valueOf(temp.getJSONObject(i).getInt("id"));
+                                        break;
+                                    case 2:
+                                        temp2[i][2]= temp.getJSONObject(i).getString("name");
+                                        break;
+                                    case 3:
+                                        temp2[i][3]= temp.getJSONObject(i).getString("name");
+                                        break;
+                                    case 4:
+                                        temp2[i][4]= temp.getJSONObject(i).getJSONArray("api_keys").getJSONObject(0).getString("api_key");
+                                        break;
+                                }
                             }
                         }
-                        Channel_Info=temp;
+                        Channel_Info=temp2;
 
-                        for(int i = 0;i<=channel_total;i++){
-                            Channel_Info[i][1]=String.valueOf(result.getJSONArray("channels").getJSONObject(i).getInt("id"));
-                            Channel_Info[i][2]=result.getJSONArray("channels").getJSONObject(i).getString("name");
-                        }
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -732,7 +759,8 @@ public class MainActivity extends AppCompatActivity {
                     temp[channel_total][4]="0.0";
 
                     Channel_Info=temp;
-
+                    Log.d("temp", String.valueOf(temp.length));
+                    Log.d("Channel_Info", String.valueOf(Channel_Info.length));
                     item.add(Channel_Info[channel_total][2] + "        " + Channel_Info[channel_total][4] + "%");
                     testadp_test.notifyDataSetChanged();
 

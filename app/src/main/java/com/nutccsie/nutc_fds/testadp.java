@@ -34,7 +34,11 @@ public class testadp extends ArrayAdapter<String> {
         View v = super.getView(position, convertView, parent);
         Log.d("listvalue",mWeights.toString());
         Log.d("listvalue",mWeights.get(position).substring(mWeights.get(position).length()-6,mWeights.get(position).length()-3).trim());
-        int itemWeight = Integer.parseInt(mWeights.get(position).substring(mWeights.get(position).length()-6,mWeights.get(position).length()-3).trim());
+        int itemWeight=0;
+        if(!mWeights.get(position).substring(mWeights.get(position).length()-6,mWeights.get(position).length()-3).trim().equals("nu")){
+            itemWeight = Integer.parseInt(mWeights.get(position).substring(mWeights.get(position).length()-6,mWeights.get(position).length()-3).trim());
+        }
+
         v.setBackgroundColor(Color.rgb(0,255,0));
         if (itemWeight<=yellow_warn){
             v.setBackgroundColor(Color.rgb(255,200,140));
