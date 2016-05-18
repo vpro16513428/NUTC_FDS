@@ -223,8 +223,14 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                ThingSpeakWork TSW = new ThingSpeakWork();
-                                TSW.newChannel(inputText.getText().toString());
+                                if (!inputText.getText().toString().equals("")) {
+                                    ThingSpeakWork TSW = new ThingSpeakWork();
+                                    TSW.newChannel(inputText.getText().toString());
+                                    item.add(inputText.getText().toString() + "        " + Channel_Info[channel_total][4] + "%");
+                                    inputText.setText("");
+                                    listinput.setAdapter(testadp_test);
+                                    count++;
+                                }
                             }
                         })
                 .create().show();
@@ -277,9 +283,9 @@ public class MainActivity extends AppCompatActivity {
                                                     public void onClick(DialogInterface dialog, int which) {
                                                         if (!inputText2.getText().toString().equals("")){
                                                             item.remove(y);
-                                                            testadp_test.insert(inputText2.getText().toString(), y);
+                                                            testadp_test.insert(inputText2.getText().toString() + "        " + Channel_Info[y][4] + "%", y);
                                                             ThingSpeakWork TSW = new ThingSpeakWork();
-                                                            TSW.editChannel(Channel_ID,inputText2.getText().toString());
+                                                            TSW.editChannel(Channel_Info[y+1][1],inputText2.getText().toString());
                                                         }
                                                     }
                                                 })
