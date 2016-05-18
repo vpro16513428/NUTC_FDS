@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     int channel_total = 0;
     String[][] Channel_Info;// [0] IP ,  [1] ID , [2] name , [3] APIKEY , [4] Percent
-    String User_APIKEY = "RO28U1DJSWQB8Q3L";
+    String User_APIKEY = "";
     String Channel_name = "";
     String Channel_ID = "";
     String Channel_APIKEY = "";
@@ -65,16 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0, y = 0, red_warn = 20, yellow_warn = 50;
-    SQLiteDatabase db;
-    //資料庫名
-    public String db_name = "SQLite";
-
-    //表名
-    public String table_name = "ListChannel";
-
-    //輔助類名
-    MyDBHelper SQLite = new MyDBHelper(MainActivity.this, db_name);
+    int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
 
     public void writeData() {
         try {
@@ -160,9 +151,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        listinput = (ListView) findViewById(R.id.listView);
+        listinput = (ListView)findViewById(R.id.listView);
         item = new ArrayList<>();
         //adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,item);
         testadp_test = new testadp(this, item);
@@ -175,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         //TSW.deleteChannel("116139");
         //TSW.percentChannel("96545");
         TSW.refresh();
-        db = SQLite.getReadableDatabase();
+
 
     }
 
@@ -189,6 +178,9 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_add:
                 openadd();
+                return true;
+            case R.id.action_edit:
+                openedit();
                 return true;
             case R.id.action_delete:
                 opendelete();
@@ -204,10 +196,8 @@ public class MainActivity extends AppCompatActivity {
     private void openadd() {
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         final View v = inflater.inflate(R.layout.add_activity, null);
-        final EditText inputText = (EditText) v.findViewById(R.id.edit);
-        final EditText inputText2 = (EditText) v.findViewById(R.id.edit2);
-
-        new AlertDialog.Builder(MainActivity.this)
+        final EditText inputText = (EditText)v.findViewById(R.id.edit);
+            new AlertDialog.Builder(MainActivity.this)
                 .setTitle("新增")
                 .setView(v)
                 .setPositiveButton("取消",
@@ -232,7 +222,62 @@ public class MainActivity extends AppCompatActivity {
         return inputText;
     }
 
-    private void opendelete() {
+    private void openedit(){
+        final String[] str = new String[count];
+        for(int i=0; i<count; i++){
+            str[i] = item.get(i);
+        }
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("修改")
+                .setSingleChoiceItems(str, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which){
+                        y = which;
+                    }
+                })
+                .setPositiveButton("取消",
+                        new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which){
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface dialog, int which){
+                                LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+                                final View v = inflater.inflate(R.layout.edit_activity, null);
+                                final EditText inputText2 = (EditText)v.findViewById(R.id.edit2);
+                                new AlertDialog.Builder(MainActivity.this)
+                                        .setTitle("修改")
+                                        .setView(v)
+                                        .setPositiveButton("取消",
+                                                new  DialogInterface.OnClickListener(){
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog,int which){
+                                                        dialog.cancel();
+                                                    }
+                                                })
+                                        .setNegativeButton("確定",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        if (!inputText2.getText().toString().equals("")){
+                                                            item.remove(y);
+                                                            testadp_test.insert(inputText2.getText().toString(), y);
+                                                            ThingSpeakWork TSW = new ThingSpeakWork();
+                                                            TSW.editChannel(Channel_ID,inputText2.getText().toString());
+                                                        }
+                                                    }
+                                                })
+                                        .show();
+                            }
+                        })
+                .show();
+    }
+
+    private void opendelete(){
         final String[] str = new String[count];
         for (int i = 0; i < count; i++) {
             str[i] = item.get(i);
@@ -259,11 +304,12 @@ public class MainActivity extends AppCompatActivity {
                                 item.remove(y);
                                 testadp_test.notifyDataSetChanged();
                                 count--;
+                                ThingSpeakWork TSW = new ThingSpeakWork();
+                                TSW.deleteChannel(Channel_ID);
                             }
                         })
                 .show();
-
-    }//用AlertDialog的方式以EditText新增到listview
+    }//用AlertDialog的方式指定刪除listview
 
     private void opensetting() {
         final LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -274,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
         final SeekBar seekbar2 = (SeekBar) v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
+        final EditText edittext = (EditText)v.findViewById(R.id.edit);
         final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
         final Button set_btn = (Button) v.findViewById(R.id.Set_sensor_button);
         seekbar.setProgress(yellow_warn);
@@ -293,8 +340,9 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("確定",
                         new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
+                            public void onClick(DialogInterface dialog,int which){
+                                User_APIKEY = edittext.getText().toString();
+                                Log.d("text",User_APIKEY);
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

@@ -7,8 +7,8 @@
     <EditText
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:id="@+id/edit"
+        android:id="@+id/edit2"
         android:singleLine="true"
         android:inputType=""
-        android:hint="物品名稱 EX:洗髮精"/>
+        android:hint="修改物品名稱 EX:洗髮精"/>
 </LinearLayout>

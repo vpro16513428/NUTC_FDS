@@ -62,6 +62,7 @@
         android:id="@+id/edit"
         android:singleLine="true"
         android:inputType=""
+        android:text="RO28U1DJSWQB8Q3L"
         android:hint="輸入您的User_APIKey"/>
 
     <Button
