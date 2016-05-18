@@ -30,15 +30,15 @@ public class testadp extends ArrayAdapter<String> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = super.getView(position, convertView, parent);
-        //Log.d("listvalue",mWeights.get(position).substring(mWeights.get(position).length()-4,mWeights.get(position).length()-1));
-        /*int itemWeight = Integer.parseInt(mWeights.get(position).substring(mWeights.get(position).length()-4,mWeights.get(position).length()-1).trim());
+        Log.d("listvalue",mWeights.get(position).substring(mWeights.get(position).length()-4,mWeights.get(position).length()-1));
+        int itemWeight = Integer.parseInt(mWeights.get(position).substring(mWeights.get(position).length()-4,mWeights.get(position).length()-1).trim());
         v.setBackgroundColor(Color.rgb(0,255,0));
         if (itemWeight<=yellow_warn){
             v.setBackgroundColor(Color.rgb(255,200,140));
         }
         if (itemWeight<=red_warn){
             v.setBackgroundColor(Color.rgb(255,0,0));
-        }*/
+        }
         return v;
     }
 
