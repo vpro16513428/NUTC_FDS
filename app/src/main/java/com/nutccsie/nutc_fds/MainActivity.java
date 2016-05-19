@@ -208,6 +208,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_delete:
                 opendelete();
                 return true;
+            case R.id.action_reset:
+                openreset();
+                return true;
             case R.id.action_settings:
                 opensetting();
                 return true;
@@ -351,12 +354,46 @@ public class MainActivity extends AppCompatActivity {
                                 if(channel_total<0){
                                     Channel_Info=null;
                                 }
-
-
                             }
                         })
                 .show();
     }//用AlertDialog的方式指定刪除listview
+
+    private void openreset(){
+        String[] str = new String[channel_total+1];
+        for (int i = 0; i <= channel_total; i++) {
+            str[i] = item.get(i);
+        }
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("重置")
+                .setSingleChoiceItems(str, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        y = which;
+                    }
+                })
+                .setPositiveButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("確定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ThingSpeakWork TSW = new ThingSpeakWork();
+                                TSW.resetChannel(Channel_Info[y][1]);
+
+                                item.remove(y);
+                                Channel_Info[y][4] = "0.0";
+                                testadp_test.insert(Channel_Info[y][2] + "        " + Channel_Info[y][4] + "%", y);
+
+                            }
+                        })
+                .show();
+    }//用AlertDialog的方式指定重置channel
 
     private void opensetting() {
         final LayoutInflater inflater = LayoutInflater.from(MainActivity.this);

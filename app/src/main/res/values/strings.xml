@@ -5,6 +5,7 @@
     <string name="action_settings">設定</string>
     <string name="action_del">刪除</string>
     <string name="action_edit">修改</string>
+    <string name="action_reset">重置</string>
     <string name="tvApSsidTitle">SSID: </string>
     <string name="tvPasswordTitle">Password: </string>
     <!--<string name="switchIsSsidHiddenTitle">SSID is Hidden</string>-->
