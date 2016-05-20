@@ -342,16 +342,17 @@ public class MainActivity extends AppCompatActivity {
                                 item.remove(y);
                                 testadp_test.notifyDataSetChanged();
 
-
+                                channel_total-=1;
                                 String[][] temp =new String[channel_total+1][5];
-                                for (int i = 0;i<=channel_total;i++){
-                                    if(i!=y){
-                                        temp[i]=Channel_Info[i].clone();
-                                    }
+                                for (int i = 0;i<y;i++){
+                                    temp[i]=Channel_Info[i].clone();
+                                }
+                                for (int i = y;i<=channel_total;i++){
+                                    temp[i]=Channel_Info[i+1].clone();
                                 }
                                 Channel_Info=temp;
 
-                                channel_total-=1;
+
                                 if(channel_total<0){
                                     Channel_Info=null;
                                 }
