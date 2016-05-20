@@ -3,6 +3,7 @@ package com.nutccsie.nutc_fds;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.StringDef;
 import android.support.v7.app.AlertDialog;
@@ -426,6 +427,10 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog,int which){
                                 User_APIKEY = edittext.getText().toString();
+                                Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+                                intent.putExtra("User_APIKEY", User_APIKEY);
+                                intent.putExtra("red_warn", red_warn);
+                                startService(intent);
                                 Log.d("text",User_APIKEY);
                             }
                         });
@@ -743,10 +748,10 @@ public class MainActivity extends AppCompatActivity {
                                         temp2[i][2]= temp.getJSONObject(i).getString("name");
                                         break;
                                     case 3:
-                                        temp2[i][3]= temp.getJSONObject(i).getString("name");
+                                        temp2[i][3]= temp.getJSONObject(i).getJSONArray("api_keys").getJSONObject(0).getString("api_key");
                                         break;
                                     case 4:
-                                        temp2[i][4]= temp.getJSONObject(i).getJSONArray("api_keys").getJSONObject(0).getString("api_key");
+                                        temp2[i][4]= "0.0";
                                         break;
                                 }
                             }

@@ -42,6 +42,7 @@ public class testadp extends ArrayAdapter<String> {
         v.setBackgroundColor(Color.rgb(0,255,0));
         if (itemWeight<=yellow_warn){
             v.setBackgroundColor(Color.rgb(255,200,140));
+
         }
         if (itemWeight<=red_warn){
             v.setBackgroundColor(Color.rgb(255,0,0));
