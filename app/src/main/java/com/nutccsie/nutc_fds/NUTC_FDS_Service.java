@@ -5,22 +5,19 @@ package com.nutccsie.nutc_fds;
  */
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -33,13 +30,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -152,15 +145,22 @@ public class NUTC_FDS_Service extends Service {
             for (int i=0 ;i<=channel_total; i++){
 
                 if (Float.parseFloat(Channel_Info[i][4])<red_warn && Channel_Info[i][5].equals("0") && !Channel_Info[i][4].equals("0.0")){
-                    final int notifyID = 1; // 通知的識別號碼
+                    final int notifyID =Integer.valueOf(Channel_Info[i][1]); // 通知的識別號碼
+                    // 建立震動效果，陣列中元素依序為停止、震動的時間，單位是毫秒
+                    long[] vibrate_effect = {500, 500, 500, 500};
+                    final Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION); // 通知音效的URI，在這裡使用系統內建的通知音效
                     final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); // 取得系統的通知服務
-                    final Notification notification = new Notification.Builder(getApplicationContext()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle("test").setContentText(Channel_Info[i][4]).build(); // 建立通知
+                    final Notification notification = new Notification.Builder(getApplicationContext())
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContentTitle("液難忘_FDS")
+                            .setVibrate(vibrate_effect)
+                            .setSound(soundUri)
+                            .setContentText(Channel_Info[i][2]+"只剩下"+Channel_Info[i][4]+"%囉!!").build(); // 建立通知
+                    //notification.defaults=Notification.DEFAULT_ALL;
                     notificationManager.notify(notifyID, notification); // 發送通知
                     Channel_Info[i][5] = String.valueOf(Integer.parseInt(Channel_Info[i][5])+1);
-                    Log.d("notification","123");
                 }
             }
-
             ThingSpeakWork TSW= new ThingSpeakWork();
             TSW.refresh();
             try {
@@ -170,11 +170,6 @@ public class NUTC_FDS_Service extends Service {
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-
-
-
-
-
             handler.postDelayed(this, 1000);
         }
     };

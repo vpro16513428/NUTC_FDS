@@ -4,9 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.hardware.Sensor;
 import android.os.AsyncTask;
-import android.support.annotation.StringDef;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,15 +23,11 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.database.sqlite.SQLiteDatabase;
 import android.widget.Toast;
-
 import com.nutccsie.nutc_fds.task.__IEsptouchTask;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -214,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
                                     intent.putExtra("User_APIKEY", User_APIKEY);
                                     intent.putExtra("red_warn", red_warn);
                                     startService(intent);
+                                    Toast.makeText(MainActivity.this, "Service start", Toast.LENGTH_SHORT).show();
                                     ThingSpeakWork TSW = new ThingSpeakWork();
                                     TSW.refresh();
                                 }
@@ -466,6 +461,7 @@ public class MainActivity extends AppCompatActivity {
                                 intent.putExtra("User_APIKEY", User_APIKEY);
                                 intent.putExtra("red_warn", red_warn);
                                 startService(intent);
+                                Toast.makeText(MainActivity.this, "Service start", Toast.LENGTH_SHORT).show();
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -915,7 +911,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void onEsptoucResultAddedPerform(final IEsptouchResult result) {
         runOnUiThread(new Runnable() {
 
@@ -1081,7 +1076,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     public class MyClient_send_Task extends AsyncTask<String, Void, Void> {
         String response = "";
 
@@ -1136,5 +1130,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
 }
 
