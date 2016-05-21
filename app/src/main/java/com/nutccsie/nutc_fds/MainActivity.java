@@ -1075,8 +1075,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void result) {
-            textResponse.setText(response);
             super.onPostExecute(result);
+            Log.d("result", String.valueOf(result));
         }
 
     }
@@ -1130,11 +1130,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void result) {
-            textResponse.setText(response);
             super.onPostExecute(result);
+            Log.d("result", String.valueOf(result));
         }
 
     }
-
 }
 
