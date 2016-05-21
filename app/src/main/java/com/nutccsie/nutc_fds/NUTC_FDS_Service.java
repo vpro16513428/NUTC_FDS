@@ -129,7 +129,9 @@ public class NUTC_FDS_Service extends Service {
             Log.d("intent","not null");
             User_APIKEY=intent.getStringExtra("User_APIKEY").toString();
             red_warn=intent.getIntExtra("red_warn", red_warn);
+            Log.d("User_APIKEY",User_APIKEY);
         }else{
+            Log.d("intent","null");
         }
 
         handler.postDelayed(showTime, 1000);
@@ -139,13 +141,14 @@ public class NUTC_FDS_Service extends Service {
 
     @Override
     public void onDestroy() {
+        writeData();
         handler.removeCallbacks(showTime);
         super.onDestroy();
     }
 
     private Runnable showTime = new Runnable() {
         public void run() {
-
+            Log.d("run","123");
             for (int i=0 ;i<=channel_total; i++){
 
                 if (Float.parseFloat(Channel_Info[i][4])<red_warn && Channel_Info[i][5].equals("0") && !Channel_Info[i][4].equals("0.0")){
@@ -154,13 +157,9 @@ public class NUTC_FDS_Service extends Service {
                     final Notification notification = new Notification.Builder(getApplicationContext()).setSmallIcon(R.mipmap.ic_launcher).setContentTitle("test").setContentText(Channel_Info[i][4]).build(); // 建立通知
                     notificationManager.notify(notifyID, notification); // 發送通知
                     Channel_Info[i][5] = String.valueOf(Integer.parseInt(Channel_Info[i][5])+1);
+                    Log.d("notification","123");
                 }
             }
-
-
-
-
-
 
             ThingSpeakWork TSW= new ThingSpeakWork();
             TSW.refresh();

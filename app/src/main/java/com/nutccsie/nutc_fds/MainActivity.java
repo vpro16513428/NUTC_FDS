@@ -274,7 +274,6 @@ public class MainActivity extends AppCompatActivity {
                                 if (!inputText.getText().toString().equals("")) {
                                     ThingSpeakWork TSW = new ThingSpeakWork();
                                     TSW.newChannel(inputText.getText().toString());
-
                                 }
                             }
                         })
@@ -459,9 +458,14 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog,int which){
+                                Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+                                stopService(intent);
                                 testadp_test.setYellowWarnValue(yellow_warn);
                                 testadp_test.setRedWarnValue(red_warn);
                                 testadp_test.notifyDataSetChanged();
+                                intent.putExtra("User_APIKEY", User_APIKEY);
+                                intent.putExtra("red_warn", red_warn);
+                                startService(intent);
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
