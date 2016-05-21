@@ -619,7 +619,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         if (v == buttonConnect) {
-                            MyClient_connect_Task myClientTask = new MyClient_connect_Task(str1[y-1], 18266);
+                            MyClient_connect_Task myClientTask = new MyClient_connect_Task(str1[y], 18266);
                             myClientTask.execute();
                         }
                     }
