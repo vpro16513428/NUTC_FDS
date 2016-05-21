@@ -44,6 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/seekBar2"
+        android:max="50"
         android:layout_weight="1" />
 
     <TextView
@@ -55,15 +56,6 @@
         android:id="@+id/textView4"
         android:layout_gravity="left|center_horizontal"
         android:layout_weight="0.25" />
-
-    <EditText
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:id="@+id/edit"
-        android:singleLine="true"
-        android:inputType=""
-        android:text="RO28U1DJSWQB8Q3L"
-        android:hint="輸入您的User_APIKey"/>
 
     <Button
         android:layout_width="match_parent"

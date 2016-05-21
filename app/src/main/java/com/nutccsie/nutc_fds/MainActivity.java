@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.hardware.Sensor;
 import android.os.AsyncTask;
 import android.support.annotation.StringDef;
 import android.support.v7.app.AlertDialog;
@@ -15,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,16 +59,17 @@ public class MainActivity extends AppCompatActivity {
     String Channel_ID = "";
     String Channel_APIKEY = "";
     String Channel_percent = "";
-    String Sensor_IP = "";
+    String Sensor_IP[];
     Socket socket = null;
     TextView textResponse;
 
     private EditText inputText;
     private ListView listinput;
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<String> name_adapter;
+    private ArrayAdapter<String> ip_adapter;
     private testadp testadp_test;
     private ArrayList<String> item;
-    int count = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
+    int x = 0 , y = 0 , red_warn = 20 , yellow_warn = 50;
 
     public void writeData() {
         try {
@@ -186,7 +189,37 @@ public class MainActivity extends AppCompatActivity {
         Channel_Info[0][2]="";
         Channel_Info[0][3]="Y50WL6TXOL5JY42N";
         Channel_Info[0][4]="";
-        if(!User_APIKEY.equals("")){
+        Sensor_IP = new String[1];
+        Sensor_IP[0] = Channel_Info[0][0];
+        if(User_APIKEY.equals("")){
+            LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+            final View v = inflater.inflate(R.layout.user_apikey, null);
+            final EditText inputText4 = (EditText)v.findViewById(R.id.edit4);
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("User_APIKEY")
+                    .setView(v)
+                    .setPositiveButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            })
+                    .setNegativeButton("確定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    User_APIKEY = inputText4.getText().toString();
+                                    Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+                                    intent.putExtra("User_APIKEY", User_APIKEY);
+                                    intent.putExtra("red_warn", red_warn);
+                                    startService(intent);
+                                    ThingSpeakWork TSW = new ThingSpeakWork();
+                                    TSW.refresh();
+                                }
+                            })
+                    .show();
+        }else{
             ThingSpeakWork TSW = new ThingSpeakWork();
             TSW.refresh();
         }
@@ -406,7 +439,6 @@ public class MainActivity extends AppCompatActivity {
         final TextView text2 = (TextView) v.findViewById(R.id.textView2);
         final SeekBar seekbar2 = (SeekBar) v.findViewById(R.id.seekBar2);
         final TextView text4 = (TextView) v.findViewById(R.id.textView4);
-        final EditText edittext = (EditText)v.findViewById(R.id.edit);
         final Button scn_btn = (Button) v.findViewById(R.id.Scan_sensor_button);
         final Button set_btn = (Button) v.findViewById(R.id.Set_sensor_button);
         seekbar.setProgress(yellow_warn);
@@ -427,12 +459,9 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog,int which){
-                                User_APIKEY = edittext.getText().toString();
-                                Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
-                                intent.putExtra("User_APIKEY", User_APIKEY);
-                                intent.putExtra("red_warn", red_warn);
-                                startService(intent);
-                                Log.d("text",User_APIKEY);
+                                testadp_test.setYellowWarnValue(yellow_warn);
+                                testadp_test.setRedWarnValue(red_warn);
+                                testadp_test.notifyDataSetChanged();
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -442,8 +471,12 @@ public class MainActivity extends AppCompatActivity {
                 progress = progressV;
                 text3.setText((progress) + "%");
                 yellow_warn = progress;
-                testadp_test.setYellowWarnValue(yellow_warn);
-                testadp_test.notifyDataSetChanged();
+                if (yellow_warn<50){
+                    seekBar.setProgress(50);
+                    yellow_warn = 50;
+                    text3.setText((progress) + "%");
+                }
+
             }
 
             public void onStartTrackingTouch(SeekBar arg0) {
@@ -459,8 +492,6 @@ public class MainActivity extends AppCompatActivity {
                 progress = progressV;
                 text4.setText((progress) + "%");
                 red_warn = progress;
-                testadp_test.setRedWarnValue(red_warn);
-                testadp_test.notifyDataSetChanged();
             }
 
             public void onStartTrackingTouch(SeekBar arg0) {
@@ -536,27 +567,59 @@ public class MainActivity extends AppCompatActivity {
         set_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String[] str = new String[channel_total+2];
+                final String[] str1 = new String[2];
+                str[0] = "請選擇Channel Name：";
+                str1[0] = "請選擇Channel IP：";
+                for (int i = 1; i <= channel_total+1; i++) {
+                    str[i] = Channel_Info[i-1][2];
+                }
+                for (int i=1; i <= 1; i++){
+                    str1[i] = Sensor_IP[i-1];
+                }
                 LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
                 final View set_v = inflater.inflate(R.layout.socket_activity, null);
-
+                final Spinner spinner;
+                final Spinner spinner2;
                 final TextView txtSend;
-                final EditText editTextAddress, editTextPort;
                 final Button buttonConnect, buttonSend;
-
-                editTextAddress = (EditText) set_v.findViewById(R.id.address);
-                editTextAddress.setText(Sensor_IP);
-                editTextPort = (EditText) set_v.findViewById(R.id.port);
+                spinner = (Spinner)set_v.findViewById(R.id.spinner);
+                spinner2 = (Spinner)set_v.findViewById(R.id.spinner2);
                 buttonConnect = (Button) set_v.findViewById(R.id.connect);
-                textResponse = (TextView) set_v.findViewById(R.id.response);
                 buttonSend = (Button) set_v.findViewById(R.id.send_btn);
-                txtSend = (TextView) set_v.findViewById(R.id.txtSend);
+
+
+                name_adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, str);
+                spinner.setAdapter(name_adapter);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void  onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
+                        x = position;
+                        Log.d("x",String.valueOf(x));
+                    }
+                    @Override
+                    public void  onNothingSelected(AdapterView<?> arg0) {
+                    }
+                });
+
+                ip_adapter=new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, str1);
+                spinner2.setAdapter(ip_adapter);
+                spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void  onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
+                        y = position;
+                        Log.d("y",String.valueOf(y));
+                    }
+                    @Override
+                    public void  onNothingSelected(AdapterView<?> arg0) {
+                    }
+                });
 
                 buttonConnect.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if (v == buttonConnect) {
-                            Log.d("IP:PORT", editTextAddress.getText().toString() + ":" + editTextPort.getText().toString());
-                            MyClient_connect_Task myClientTask = new MyClient_connect_Task(editTextAddress.getText().toString(), Integer.parseInt(editTextPort.getText().toString()));
+                            MyClient_connect_Task myClientTask = new MyClient_connect_Task(str1[y-1], 18266);
                             myClientTask.execute();
                         }
                     }
@@ -567,7 +630,7 @@ public class MainActivity extends AppCompatActivity {
                         if (v == buttonSend) {
 
                             MyClient_send_Task myClient_send_task = new MyClient_send_Task();
-                            myClient_send_task.execute(txtSend.getText().toString());
+                            myClient_send_task.execute("Channel_APIKEY:"+Channel_Info[x-1][3]);
                         }
                     }
                 });
@@ -957,8 +1020,8 @@ public class MainActivity extends AppCompatActivity {
                                 + ",InetAddress = "
                                 + resultInList.getInetAddress()
                                 .getHostAddress() + "\n");
-                        Sensor_IP = resultInList.getInetAddress().toString();
-                        Toast.makeText(MainActivity.this, Sensor_IP, Toast.LENGTH_LONG).show();
+                        Sensor_IP[0] = resultInList.getInetAddress().toString();
+                        Toast.makeText(MainActivity.this, Sensor_IP[0], Toast.LENGTH_LONG).show();
                         sb.append("Esptouch success, bssid = " + resultInList.getBssid() + ",InetAddress = " + resultInList.getInetAddress().getHostAddress() + "\n");
                         count++;
                         if (count >= maxDisplayCount) {
