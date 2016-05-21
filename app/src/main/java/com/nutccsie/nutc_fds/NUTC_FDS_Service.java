@@ -144,7 +144,7 @@ public class NUTC_FDS_Service extends Service {
             Log.d("run","123");
             for (int i=0 ;i<=channel_total; i++){
 
-                if (Float.parseFloat(Channel_Info[i][4])<red_warn && Channel_Info[i][5].equals("0") && !Channel_Info[i][4].equals("0.0")){
+                if (Float.parseFloat(Channel_Info[i][4])<red_warn && Channel_Info[i][5].equals("0") /*&& !Channel_Info[i][4].equals("0.0")*/){
                     final int notifyID =Integer.valueOf(Channel_Info[i][1]); // 通知的識別號碼
                     // 建立震動效果，陣列中元素依序為停止、震動的時間，單位是毫秒
                     long[] vibrate_effect = {500, 500, 500, 500};
@@ -157,6 +157,7 @@ public class NUTC_FDS_Service extends Service {
                             .setSound(soundUri)
                             .setContentText(Channel_Info[i][2]+"只剩下"+Channel_Info[i][4]+"%囉!!").build(); // 建立通知
                     //notification.defaults=Notification.DEFAULT_ALL;
+                    //notification.flags = Notification.FLAG_AUTO_CANCEL;
                     notificationManager.notify(notifyID, notification); // 發送通知
                     Channel_Info[i][5] = String.valueOf(Integer.parseInt(Channel_Info[i][5])+1);
                 }

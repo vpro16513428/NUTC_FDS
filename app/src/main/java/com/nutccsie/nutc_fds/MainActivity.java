@@ -166,6 +166,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         writeData();
+        Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+        stopService(intent);
+        Toast.makeText(MainActivity.this, "Service stop", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -215,6 +218,11 @@ public class MainActivity extends AppCompatActivity {
                             })
                     .show();
         }else{
+            Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+            intent.putExtra("User_APIKEY", User_APIKEY);
+            intent.putExtra("red_warn", red_warn);
+            startService(intent);
+            Toast.makeText(MainActivity.this, "Service start", Toast.LENGTH_SHORT).show();
             ThingSpeakWork TSW = new ThingSpeakWork();
             TSW.refresh();
         }
@@ -453,15 +461,12 @@ public class MainActivity extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog,int which){
-                                Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
-                                stopService(intent);
                                 testadp_test.setYellowWarnValue(yellow_warn);
                                 testadp_test.setRedWarnValue(red_warn);
                                 testadp_test.notifyDataSetChanged();
-                                intent.putExtra("User_APIKEY", User_APIKEY);
-                                intent.putExtra("red_warn", red_warn);
-                                startService(intent);
-                                Toast.makeText(MainActivity.this, "Service start", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(MainActivity.this,NUTC_FDS_Service.class);
+                                stopService(intent);
+                                Toast.makeText(MainActivity.this, "Service stop", Toast.LENGTH_SHORT).show();
                             }
                         });
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
